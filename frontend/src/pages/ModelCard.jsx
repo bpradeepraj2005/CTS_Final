@@ -1,166 +1,266 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react'
 import { api } from '../lib/api'
-import { Card, Meter, Spinner, pct } from '../components/ui'
+import { Card, Spinner, pct } from '../components/ui'
 
-/* The metrics on this page are read straight from ml/models/metrics.json,
-   which the training script writes from a held-out split. Nothing is
-   rounded up, relabelled, or presented against a flattering baseline. */
+/* The figures on this page are read from what is actually running: the live
+   /health of the guideline service and the loaded artifact of the supporting-
+   material model. Nothing here is a stored training metric, because neither
+   model is trained by this repository any more.
+
+   The previous version of this page reported held-out R2 and MAE for a
+   scikit-learn regressor. That model has been replaced by a retrieval-and-
+   reasoning service, which has no such numbers. Rather than fill the fields
+   with something that looks like accuracy, the page now reports provenance:
+   which guideline, which version, and what the model behind the appeal
+   percentages was actually fitted on. */
 export default function ModelCard() {
   const [data, setData] = useState(null)
+
   useEffect(() => {
-    api.get('/api/dashboard/model-card').then(setData).catch(() => setData({ metrics: {} }))
+    api
+      .get('/api/dashboard/model-card')
+      .then(setData)
+      .catch(() => setData({ metrics: {}, ready: {} }))
   }, [])
 
-  if (!data) return <Spinner label="Loading model metrics" />
-  const m = data.metrics
-  if (!m?.available) {
+  if (!data) return <Spinner label="Loading model provenance" />
+
+  const m = data.metrics || {}
+  const m1 = m.model_1
+  const m2 = m.model_2
+
+  if (!m1 && !m2) {
     return (
-      <Card title="No metrics recorded">
+      <Card title="No model information available">
         <p className="text-[13px] text-ink-2">
-          Train the models first: <code className="num">python ml/train.py --csv your.csv</code>
+          The backend did not return provenance for either model. Check that the
+          API is running and that <span className="num">PRIOR_AUTH_URL</span> is set.
         </p>
       </Card>
     )
   }
-
-  const pf = m.policy_fit
-  const ap = m.appeal_propensity
-  const apLift = ap.accuracy - ap.majority_class_baseline
-  const apUseful = ap.macro_auc_ovr >= 0.6
 
   return (
     <div className="mx-auto max-w-4xl space-y-5">
       <div>
         <div className="eyebrow">Transparency</div>
         <h1 className="mt-1 text-2xl font-semibold">Model card</h1>
-        <p className="mt-1.5 text-[13px] text-ink-2">
-          Held-out performance for the models this platform runs, measured on a 20%
-          split of {m.dataset_rows.toLocaleString()} rows from{' '}
-          <span className="num">{m.source_csv}</span>.
+        <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">
+          What this platform runs, and what each part is and is not evidence of. The
+          approve, deny and route-to-human decision is made by a deterministic rules
+          engine; the two models below inform it rather than replace it.
         </p>
       </div>
 
-      <Card
-        eyebrow="Model 1 of 2"
-        title="Policy-fit regressor"
-        action={
-          <span className="chip border-approve-line bg-approve-soft text-approve">
-            <CheckCircle2 size={11} /> performing
-          </span>
-        }
-      >
-        <p className="text-[13px] text-ink-2">
-          Predicts how well a request aligns with payer policy, from the clinical,
-          documentation and coverage features. This score carries 25% of the
-          necessity weighting and sets the auto-approve and auto-deny thresholds.
-        </p>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <Stat label="R² on held-out data" value={pf.r2.toFixed(3)} tone="approve" />
-          <Stat label="Mean absolute error" value={pf.mae.toFixed(4)} />
-          <Stat label="Target standard deviation" value={pf.target_std.toFixed(4)} />
-        </div>
-        <p className="mt-4 text-[13px] text-ink-2">
-          Typical error is <span className="num">{pf.mae.toFixed(4)}</span> against a
-          target that varies by <span className="num">{pf.target_std.toFixed(4)}</span> —
-          roughly {Math.round((pf.mae / pf.target_std) * 100)}% of the spread. The model
-          explains {pct(pf.r2, 1)} of the variance.
-        </p>
-      </Card>
-
-      <Card
-        eyebrow="Model 2 of 2"
-        title="Appeal-propensity classifier"
-        action={
-          <span className={`chip ${apUseful
-            ? 'border-approve-line bg-approve-soft text-approve'
-            : 'border-deny-line bg-deny-soft text-deny'}`}>
-            <AlertTriangle size={11} /> {apUseful ? 'performing' : 'no usable signal'}
-          </span>
-        }
-      >
-        <p className="text-[13px] text-ink-2">
-          Predicts whether a denied request will be resubmitted, formally appealed,
-          appealed with new evidence, or dropped.
-        </p>
-
-        <div className="mt-4 grid gap-4 sm:grid-cols-4">
-          <Stat label="Accuracy" value={pct(ap.accuracy, 1)} />
-          <Stat label="Majority-class baseline" value={pct(ap.majority_class_baseline, 1)} />
-          <Stat
-            label="Lift over baseline" value={`${apLift >= 0 ? '+' : ''}${(apLift * 100).toFixed(1)}pp`}
-            tone={apLift > 0.05 ? 'approve' : 'deny'}
-          />
-          <Stat
-            label="Macro AUC (one-vs-rest)" value={ap.macro_auc_ovr?.toFixed(3)}
-            tone={apUseful ? 'approve' : 'deny'}
-          />
-        </div>
-
-        <div className="mt-5">
-          <div className="mb-2 flex justify-between text-2xs text-ink-3">
-            <span>0.500 — random guessing</span>
-            <span>1.000 — perfect</span>
-          </div>
-          <div className="relative">
-            <Meter value={ap.macro_auc_ovr} tone={apUseful ? 'approve' : 'deny'} />
-            <div className="absolute -top-1 h-3.5 w-px bg-ink" style={{ left: '50%' }} />
-          </div>
-        </div>
-
-        {!apUseful && (
-          <div className="mt-5 rounded-md border border-deny-line bg-deny-soft p-4">
-            <h4 className="text-[13px] font-semibold text-deny">
-              This model is not usable as-is, and the reason is in the data
-            </h4>
-            <p className="mt-2 text-[13px] leading-relaxed text-deny">
-              A macro AUC of <span className="num">{ap.macro_auc_ovr?.toFixed(3)}</span> is
-              a coin flip. Accuracy of <span className="num">{pct(ap.accuracy, 1)}</span>{' '}
-              beats the majority-class baseline by only{' '}
-              <span className="num">{(apLift * 100).toFixed(1)}</span> percentage points,
-              which means the classifier has learned the class proportions rather than
-              any relationship between a case and its appeal outcome.
-            </p>
-            <p className="mt-2 text-[13px] leading-relaxed text-deny">
-              Reporting a high accuracy on the rarest class would be reporting the class
-              imbalance, not model skill. The predictions are still shown in the interface,
-              labelled with this caveat, so no reviewer mistakes them for evidence.
-            </p>
-          </div>
-        )}
-      </Card>
+      {m1 && <ModelOne m1={m1} />}
+      {m2 && <ModelTwo m2={m2} />}
 
       <Card eyebrow="Not a model" title="Medical-necessity rules engine">
         <p className="text-[13px] leading-relaxed text-ink-2">
-          The approve, deny and route-to-human decision is made by a deterministic,
-          weighted rules engine rather than a classifier. Two reasons. First, the
-          training corpus contains denied cases only, so an approve/deny boundary
-          cannot be learned from it — any classifier trained on it would output one
-          class. Second, a decision that affects someone's treatment has to be
+          The decision itself is a deterministic, weighted rules engine rather than a
+          classifier. A decision that affects someone&apos;s treatment has to be
           reconstructable criterion by criterion for an audit, which the decision
-          ledger on every case provides.
+          ledger on every case provides. Model 1 grounds that engine in a cited
+          guideline; Model 2 only decides whether a denial is worth a human&apos;s time.
         </p>
-        <ul className="mt-3 space-y-1.5">
-          {m.notes?.map((n) => (
-            <li key={n} className="flex gap-2.5 text-[13px] text-ink-2">
-              <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-ink-3" />
-              {n}
-            </li>
-          ))}
-        </ul>
+        {m.notes?.length > 0 && (
+          <ul className="mt-3 space-y-1.5">
+            {m.notes.map((n) => (
+              <li key={n} className="flex gap-2.5 text-[13px] leading-relaxed text-ink-2">
+                <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-ink-3" />
+                {n}
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
     </div>
   )
 }
 
-function Stat({ label, value, tone = 'ink' }) {
-  const tones = { ink: 'text-ink', approve: 'text-approve', deny: 'text-deny' }
+/* ------------------------------------------------------------------ */
+
+function ModelOne({ m1 }) {
+  const up = m1.reachable
+  return (
+    <Card
+      eyebrow="Model 1 of 2"
+      title={m1.name || 'Guideline reasoning service'}
+      action={
+        <span
+          className={`chip ${
+            up
+              ? 'border-approve-line bg-approve-soft text-approve'
+              : 'border-deny-line bg-deny-soft text-deny'
+          }`}
+        >
+          {up ? <CheckCircle2 size={11} /> : <XCircle size={11} />}
+          {up ? 'reachable' : 'unreachable'}
+        </span>
+      }
+    >
+      <p className="text-[13px] leading-relaxed text-ink-2">
+        Retrieves the guideline record that covers the case, then reasons over it to
+        return a verdict per criterion with a page citation. The approval likelihood
+        is a weighted share of the criteria the case satisfies — not a learned score —
+        and unmet mandatory criteria cap it.
+      </p>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-4">
+        <Stat label="Conditions indexed" value={fmtInt(m1.conditions_indexed)} />
+        <Stat label="Criteria indexed" value={fmtInt(m1.criteria_indexed)} />
+        <Stat label="Procedure codes" value={fmtInt(m1.procedure_codes)} />
+        <Stat label="Text chunks" value={fmtInt(m1.chunks)} />
+      </div>
+
+      <dl className="mt-4 divide-y divide-rule/70 border-t border-rule">
+        <Row label="Guideline version" value={m1.guideline_version} />
+        <Row label="Rule table version" value={m1.rule_table_version} />
+        <Row label="Prompt version" value={m1.prompt_version} />
+        <Row label="Reasoning model" value={m1.reasoning_model} />
+        <Row label="Endpoint" value={m1.endpoint} />
+      </dl>
+
+      {!up && (
+        <div className="mt-4 rounded-md border border-deny-line bg-deny-soft p-4">
+          <h4 className="text-[13px] font-semibold text-deny">
+            The service is not answering
+          </h4>
+          <p className="mt-2 text-[13px] leading-relaxed text-deny">
+            Adjudication returns 503 until it responds. On the free tier the instance
+            spins down when idle and a cold start takes 50–90 seconds, so this often
+            clears on its own within a minute.
+          </p>
+        </div>
+      )}
+
+      {m1.notes?.length > 0 && (
+        <ul className="mt-4 space-y-1.5">
+          {m1.notes.map((n) => (
+            <li key={n} className="flex gap-2.5 text-[13px] leading-relaxed text-ink-2">
+              <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-ink-3" />
+              {n}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  )
+}
+
+function ModelTwo({ m2 }) {
+  const loaded = m2.available
+  /* Fitted on synthetic labels, so it has no demonstrated skill on real appeal
+     behaviour. Say so plainly rather than presenting the percentages as findings. */
+  const synthetic = String(m2.trained_on || '').toLowerCase().includes('synthetic')
+
+  return (
+    <Card
+      eyebrow="Model 2 of 2"
+      title={m2.name || 'Supporting-material assessment'}
+      action={
+        <span
+          className={`chip ${
+            !loaded
+              ? 'border-deny-line bg-deny-soft text-deny'
+              : synthetic
+                ? 'border-review-line bg-review-soft text-review'
+                : 'border-approve-line bg-approve-soft text-approve'
+          }`}
+        >
+          {!loaded ? <XCircle size={11} /> : <AlertTriangle size={11} />}
+          {!loaded ? 'not loaded' : synthetic ? 'synthetic training' : 'loaded'}
+        </span>
+      }
+    >
+      <p className="text-[13px] leading-relaxed text-ink-2">
+        Runs on denied requests only. It splits every unmet criterion into gaps a
+        provider can close with documentation and gaps no document will fix. Anything
+        fixable pulls the case back to a human rather than auto-denying it.
+      </p>
+
+      {!loaded ? (
+        <div className="mt-4 rounded-md border border-deny-line bg-deny-soft p-4">
+          <h4 className="text-[13px] font-semibold text-deny">Model did not load</h4>
+          <p className="mt-2 text-[13px] leading-relaxed text-deny">
+            {m2.reason || 'Unknown error.'} Denials will stand as auto-denied without a
+            supporting-material check until this is resolved.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <Stat label="Training rows" value={fmtInt(m2.training_rows)} />
+            <Stat label="Positive base rate" value={pct(m2.base_rate, 1)} />
+            <Stat
+              label="Escalation percentile"
+              value={m2.reappeal_percentile_threshold ?? '—'}
+            />
+          </div>
+
+          <dl className="mt-4 divide-y divide-rule/70 border-t border-rule">
+            <Row label="Artifact version" value={m2.version} />
+            <Row label="Trained on" value={m2.trained_on} />
+            <Row label="Runs on" value={m2.runs_on} />
+          </dl>
+
+          {synthetic && (
+            <div className="mt-4 rounded-md border border-review-line bg-review-soft p-4">
+              <h4 className="text-[13px] font-semibold text-review">
+                The percentages are not yet evidence about real appeals
+              </h4>
+              <p className="mt-2 text-[13px] leading-relaxed text-review">
+                {m2.caveat ||
+                  'This model was fitted on synthetic labels. The pipeline is production-shaped, but the numbers are not observations of real appeal behaviour.'}
+              </p>
+              <p className="mt-2 text-[13px] leading-relaxed text-review">
+                The fixable / not-fixable split a reviewer acts on is rule-based and
+                auditable, and does not depend on this model. Only the ranking between
+                cases does. Retrain on observed outcomes before treating the
+                percentages as rates.
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
+      {m2.notes?.length > 0 && (
+        <ul className="mt-4 space-y-1.5">
+          {m2.notes.map((n) => (
+            <li key={n} className="flex gap-2.5 text-[13px] leading-relaxed text-ink-2">
+              <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-ink-3" />
+              {n}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+
+const fmtInt = (v) =>
+  v === null || v === undefined ? '—' : Number(v).toLocaleString()
+
+function Stat({ label, value }) {
   return (
     <div className="rounded-md border border-rule bg-canvas px-3 py-2.5">
       <div className="eyebrow">{label}</div>
-      <div className={`num mt-1 text-lg font-semibold leading-none ${tones[tone]}`}>
-        {value ?? '—'}
-      </div>
+      <div className="num mt-1 text-lg font-semibold leading-none">{value ?? '—'}</div>
+    </div>
+  )
+}
+
+function Row({ label, value }) {
+  if (!value) return null
+  return (
+    <div className="flex items-baseline justify-between gap-4 py-2">
+      <dt className="shrink-0 text-2xs uppercase tracking-wide text-ink-3">{label}</dt>
+      <dd className="num truncate text-right text-[13px] text-ink-2" title={String(value)}>
+        {String(value)}
+      </dd>
     </div>
   )
 }

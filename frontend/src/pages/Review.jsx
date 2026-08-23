@@ -7,7 +7,9 @@ import { api } from '../lib/api'
 import {
   Alert, Card, Empty, Field, Meter, Spinner, Status, fmtDate, pct,
 } from '../components/ui'
-import { AppealForecast, AttributionRail, DecisionLedger } from '../components/Explain'
+import {
+  AppealForecast, AttributionRail, DecisionLedger, SupportingMaterial,
+} from '../components/Explain'
 import { AuditTrail, SubmittedValues } from './Requests'
 
 const SCOPES = [
@@ -193,8 +195,12 @@ export function ReviewCase() {
           </p>
         </div>
         <div className="flex items-center gap-6">
-          <Metric label="Policy fit" value={data.policy_fit_score?.toFixed(3)} />
+          <Metric label="Approval likelihood" value={data.policy_fit_score?.toFixed(3)} />
           <Metric label="Necessity" value={pct(data.necessity_score)} />
+          <Metric
+            label="Complexity"
+            value={data.features?.complexity_score?.toFixed(3)}
+          />
           <div className="text-right">
             <div className="eyebrow mb-1.5">Status</div>
             <Status value={data.status} />
@@ -249,6 +255,9 @@ export function ReviewCase() {
               <p className="text-[13px] text-ink-2">{data.reviewer_notes}</p>
             </Card>
           )}
+
+          {/* Model 2 -- why this denial stopped for a human, and what to ask for */}
+          <SupportingMaterial assessment={data.features?.model2_assessment} />
 
           <AppealForecast prediction={data.appeal_prediction} />
 
