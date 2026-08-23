@@ -9,7 +9,11 @@ pdfplumber>=0.11.0
 reportlab>=4.2.0
 pandas>=2.2.0
 numpy>=1.26.0
-scikit-learn>=1.5.0
+# Pinned, not floated: Model 2 (ml/models/prior_auth_model.py) embeds an
+# estimator pickled under 1.8.0. Loading it on a different version raises
+# InconsistentVersionWarning and sklearn does not guarantee the predictions.
+scikit-learn==1.8.0
 joblib>=1.4.0
+httpx>=0.27.0
 groq>=0.13.0
 python-dotenv>=1.0.1
