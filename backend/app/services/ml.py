@@ -2,12 +2,12 @@
 Production serving layer for the prior-authorization models.
 
 Model 1 is the guideline reasoning service on Render (see prior_auth_client).
-Model 2 is PriorAuthTriage, the supporting-material assessment that runs only on
-the denial path (see model2).
+Model 2 is the appeal-propensity regressor bundle in
+ml/models/appeal_propensity.joblib, trained by ml/train_appeal.py, combined with
+the rule-based gap split in curability.py. It runs only on the denial path.
 
-Both local joblib artifacts -- ml/models/policy_fit.joblib and
-ml/models/appeal_propensity.joblib -- are no longer loaded. The files can stay on
-disk for reference; nothing reads them.
+ml/models/policy_fit.joblib is no longer loaded -- Model 1 replaced it. The file
+can stay on disk for reference; nothing reads it.
 
 Everything a scoring function needs now comes out of one Report. The pipeline
 fetches it once per request and threads it through, so a single adjudication
@@ -26,7 +26,7 @@ from .prior_auth_client import (  # noqa: F401  (ModelUnavailable is re-exported
     health,
 )
 
-# Obligation weights, matching PriorAuthTriage.criteria_score so that the
+# Obligation weights, shared with model2._criteria_satisfaction so that the
 # approval likelihood shown to a reviewer and the criteria satisfaction reported
 # by Model 2 cannot drift apart.
 _OBLIGATION_WEIGHTS = {
@@ -157,9 +157,11 @@ def predict_policy_fit(features: dict, document_text: str | None = None) -> floa
 # ---------------------------------------------------------------------------
 
 
-def predict_appeal(report: dict, context: dict | None = None) -> dict:
+def predict_appeal(
+    report: dict, features: dict, context: dict | None = None
+) -> dict:
     """Appeal outlook for one denied case, shaped for the reviewer UI."""
-    return model2.assess(report, context)["appeal_prediction"]
+    return model2.assess(report, features, context)["appeal_prediction"]
 
 
 def empty_appeal(reason: str = "Not assessed -- request was not denied") -> dict:
@@ -187,15 +189,13 @@ def service_health() -> dict:
 def metrics_card() -> dict:
     """Provenance for the model card.
 
-    Deliberately reports no accuracy figures. The card used to show held-out R2
-    and MAE for a scikit-learn regressor; Model 1 is retrieval plus reasoning over
-    a cited corpus and has no such numbers, and Model 2 is a binary classifier
-    scored by PR-AUC rather than one-vs-rest macro AUC. Filling those fields with
-    something that merely looks like accuracy would put fabricated figures on the
-    page the platform offers as its transparency record.
+    Model 1 is retrieval plus reasoning over a cited corpus, so it has no R2 or
+    MAE to report and none is invented for it -- what is reported is provenance:
+    which guideline, which version, which corpus.
 
-    What is reported instead is provenance -- which guideline, which version, and
-    what the model behind the appeal percentages was actually fitted on.
+    Model 2 does have held-out metrics now, read from appeal_metrics.json and
+    passed through verbatim. They are poor: ROC-AUC ~0.54 against 0.500 for
+    random guessing. That is reported as-is rather than softened.
     """
     service = health()
     m2 = model2.info()
@@ -231,17 +231,19 @@ def metrics_card() -> dict:
         },
         "model_2": {
             "name": "Supporting-material assessment",
-            "kind": "calibrated classifier over the guideline Report",
+            "kind": "HistGradientBoostingRegressor over the submitted case fields",
             "enabled": MODEL2_ENABLED,
             "runs_on": "denied requests only",
             "reappeal_percentile_threshold": MODEL2_REAPPEAL_PERCENTILE,
             **m2,
             "notes": [
                 "Splits unmet criteria into gaps a provider can close with "
-                "documentation and gaps no document will fix.",
+                "documentation and gaps no document will fix. That split is "
+                "rule-based and does not depend on the model.",
                 "Fixable gaps route to human review; only-hard gaps auto-deny.",
-                "Trained on synthetic labels, so the probabilities are not yet "
-                "evidence about real appeal behaviour.",
+                "The regressor barely separates cases on held-out data. The "
+                "corpus records case features and appeal outcomes but almost no "
+                "relationship between them.",
             ],
         },
         "notes": [

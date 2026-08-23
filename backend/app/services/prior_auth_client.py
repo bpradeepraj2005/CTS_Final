@@ -8,7 +8,7 @@ a routing block and a confidence block.
 
 The `/analyze` endpoint is the one we want. The service also exposes
 `/adjudicate` and `/adjudicate/full`, which are faster but return a different
-shape that Model 2 (PriorAuthTriage) cannot consume -- it reads `rules[].status`,
+shape that the gap classifier cannot consume -- it reads `rules[].status`,
 `confidence.score`, `routing.matched` and `flagged[].severity`, which only
 `/analyze` produces.
 

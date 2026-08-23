@@ -1,8 +1,14 @@
 """
 Model 2 -- supporting-material assessment on the denial path.
 
-Replaces the local appeal-propensity classifier (ml/models/appeal_propensity.joblib)
-with PriorAuthTriage from prior_auth_model.py.
+Two independent halves, and the split matters:
+
+  * `curability.gaps()` sorts the Report's unmet criteria into gaps a provider can
+    close with paperwork and gaps no document will fix. Rule-based, auditable,
+    and what actually decides routing.
+  * a HistGradientBoostingRegressor bundle, trained by ml/train_appeal.py on
+    appeals_prediction_transformed.csv, scores how likely the denial is to be
+    challenged and how that appeal would arrive.
 
 Position in the flow: the Decision Router sends approvals straight to Auto
 Approval. Only denials reach Model 2, which asks one question -- can the provider
@@ -12,38 +18,30 @@ fix this with more documentation?
     only hard gaps        -> Auto Denial         (no supporting material path)
     high reappeal risk    -> Human Review        (override; likely overturned)
 
-We deliberately do NOT call PriorAuthTriage.predict(). Its first branch is
-`engine confidence > 80 -> APPROVE`, which reads the reasoning engine's certainty
-as approvability. On a confidently denied case (confidence 90-96, criteria
-satisfaction 20/100) it returns APPROVE -- verified against both the live
-production Report and the model author's own example. The model's own warning
-field says so: "the engine is confident the case FAILS". APPROVE is not a legal
-output once the router has already said denial.
-
-Instead we call the components underneath predict(), which are sound:
-reappeal_probability(), percentile(), gaps(), criteria_score() and attribution().
-That also fixes a second problem -- predict() only computes a reappeal
-probability when confidence < 40, so on most denials it returned None.
+Read the caveat on `info()` before trusting the percentages. The regressor scores
+ROC-AUC 0.537 on held-out data against 0.500 for random guessing, so it barely
+separates cases at all. The routing above is unaffected: it turns on the
+rule-based gap split, and the percentile override is the only place the model can
+change an outcome.
 """
-import importlib.util
-import sys
+import json
 import threading
-import warnings
+
+import joblib
+import pandas as pd
 
 from ..config import (
     MODEL2_ENABLED,
+    MODEL2_METRICS_PATH,
     MODEL2_PATH,
     MODEL2_REAPPEAL_PERCENTILE,
-    MODEL2_REPORTED_BASELINE,
-    MODEL2_REPORTED_MACRO_AUC,
-    MODEL2_REPORTED_SCORE,
 )
+from . import curability
 from .prior_auth_client import ModelUnavailable
 
-_model = None
-_module = None
+_bundle = None
+_metrics: dict | None = None
 _load_lock = threading.Lock()
-_load_error: str | None = None
 
 APPEAL_LABELS = {
     "NEVER_APPLIED": "Unlikely to appeal",
@@ -54,44 +52,39 @@ APPEAL_LABELS = {
 
 
 def _load():
-    """Import prior_auth_model.py from MODEL2_PATH and hand back its `model`.
-
-    Loaded by path rather than by name because the file ships beside the trained
-    artifact and is not on sys.path. The module unpickles a scikit-learn
-    estimator at import time, so this is done once per process, lazily.
-    """
-    global _model, _module, _load_error
-    if _model is not None:
-        return _model, _module
+    """Load the joblib bundle once per process, lazily."""
+    global _bundle
+    if _bundle is not None:
+        return _bundle
     with _load_lock:
-        if _model is not None:
-            return _model, _module
+        if _bundle is not None:
+            return _bundle
         if not MODEL2_PATH.exists():
-            _load_error = (
-                f"Model 2 file not found at {MODEL2_PATH}. Copy prior_auth_model.py "
-                f"there, or set MODEL2_PATH."
+            raise ModelUnavailable(
+                f"Appeal model is missing at {MODEL2_PATH}. Run: "
+                f"python ml/train_appeal.py --csv data/appeals_prediction_transformed.csv"
             )
-            raise ModelUnavailable(_load_error)
         try:
-            spec = importlib.util.spec_from_file_location(
-                "prior_auth_model", MODEL2_PATH
-            )
-            module = importlib.util.module_from_spec(spec)
-            sys.modules["prior_auth_model"] = module
-            with warnings.catch_warnings():
-                # The estimator was pickled under scikit-learn 1.8.0. Pin
-                # scikit-learn==1.8.0 in requirements.txt; this only silences the
-                # per-import noise, it does not make a mismatch safe.
-                warnings.simplefilter("ignore")
-                spec.loader.exec_module(module)
-            _model, _module = module.model, module
-            _load_error = None
-        except ModelUnavailable:
-            raise
+            bundle = joblib.load(MODEL2_PATH)
         except Exception as exc:
-            _load_error = f"Could not load Model 2 from {MODEL2_PATH}: {exc}"
-            raise ModelUnavailable(_load_error) from exc
-    return _model, _module
+            raise ModelUnavailable(f"Could not load appeal model: {exc}") from exc
+        if "propensity" not in bundle:
+            raise ModelUnavailable(
+                f"{MODEL2_PATH} is not an appeal-regressor bundle (no 'propensity' "
+                f"key). Retrain with ml/train_appeal.py."
+            )
+        _bundle = bundle
+    return _bundle
+
+
+def _held_out_metrics() -> dict:
+    global _metrics
+    if _metrics is None:
+        try:
+            _metrics = json.loads(MODEL2_METRICS_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            _metrics = {}
+    return _metrics
 
 
 def ready() -> bool:
@@ -109,59 +102,97 @@ def info() -> dict:
     if not MODEL2_ENABLED:
         return {"available": False, "reason": "Model 2 disabled by configuration."}
     try:
-        model, _ = _load()
+        bundle = _load()
     except ModelUnavailable as exc:
         return {"available": False, "reason": str(exc)}
+
+    card = _held_out_metrics()
+    prop = card.get("propensity", {})
+    auc = prop.get("roc_auc")
+
     return {
         "available": True,
-        "version": getattr(model, "VERSION", "unknown"),
-        "trained_on": getattr(model, "trained_on", "unknown"),
-        "base_rate": round(float(getattr(model, "base_rate", 0.0)), 4),
-        # oof is a numpy array; `or []` would hit its ambiguous truth value.
-        "training_rows": int(len(getattr(model, "oof", []))),
+        "version": bundle.get("version", "unknown"),
+        "model": "HistGradientBoostingRegressor",
+        "trained_on": bundle.get("trained_on", "unknown"),
+        "base_rate": round(float(bundle.get("base_rate", 0.0)), 4),
+        "training_rows": card.get("dataset_rows"),
+        "source_csv": card.get("source_csv"),
+        "features_used": len(bundle.get("features") or []),
         "reappeal_percentile_threshold": MODEL2_REAPPEAL_PERCENTILE,
+        "roc_auc": auc,
+        "pr_auc": prop.get("pr_auc"),
+        "r2": prop.get("r2"),
+        "brier": prop.get("brier"),
+        "distribution_argmax_accuracy": prop.get("distribution_argmax_accuracy"),
+        "majority_class_baseline": prop.get("majority_class_baseline"),
+        "per_outcome": card.get("per_outcome", {}),
         "caveat": (
-            "Trained on synthetic labels. The pipeline is production-shaped, but "
-            "these probabilities are not yet evidence about real appeal behaviour. "
-            "Retrain on observed outcomes before relying on them."
+            f"Held-out ROC-AUC is {auc} against 0.500 for random guessing, so this "
+            f"model barely separates cases. The four-way distribution beats its "
+            f"majority-class baseline by "
+            f"{prop.get('distribution_lift_over_baseline')} of accuracy. The "
+            f"features in this corpus carry almost no information about whether a "
+            f"denial gets appealed -- treat the percentages as ranking hints, not "
+            f"rates. Routing does not depend on them."
+            if auc is not None
+            else "Held-out metrics were not found; run ml/train_appeal.py."
         ),
     }
 
 
 # ---------------------------------------------------------------------------
-# Appeal distribution
+# Scoring
 # ---------------------------------------------------------------------------
 
 
-def _distribution(p: float, fixable: int, hard: int) -> list[dict]:
-    """Split the reappeal probability across the four outcome classes.
+def _frame(features: dict, columns: list) -> pd.DataFrame:
+    """Build the one-row frame the regressors were fitted on."""
+    from ml.feature_schema import CATEGORICAL, derive_features
 
-    PriorAuthTriage predicts one number -- P(filed) x P(won) -- not a four-way
-    distribution, but the reviewer UI renders four bars. We apportion that number
-    using the gap mix, which is the only real signal available: gaps a provider
-    can close point at a resubmission with new evidence, gaps they cannot point
-    at a formal appeal.
-    """
-    total_gaps = fixable + hard
-    fs = (fixable / total_gaps) if total_gaps else 0.0
+    full = derive_features(features)
+    row = {c: full.get(c) for c in columns}
+    frame = pd.DataFrame([row], columns=columns)
+    for c in columns:
+        if c in CATEGORICAL:
+            frame[c] = frame[c].fillna("Unknown").astype("category")
+        else:
+            frame[c] = pd.to_numeric(frame[c], errors="coerce")
+    return frame
 
-    weights = {
-        "APPEAL_WITH_NEW_DOCUMENTATION": 0.25 + 0.50 * fs,
-        "REAPPLIED": 0.20 + 0.25 * fs,
-        "FORMAL_APPEAL": 0.55 - 0.35 * fs,
-    }
-    total_w = sum(weights.values())
 
-    dist = {k: p * (w / total_w) for k, w in weights.items()}
-    dist["NEVER_APPLIED"] = max(0.0, 1.0 - p)
+def _clip(v: float) -> float:
+    """Least-squares regression on a 0/1 target can land outside the unit
+    interval. Clip rather than pretend it cannot happen."""
+    return float(max(0.0, min(1.0, v)))
 
+
+def _percentile(bundle, p: float) -> float:
+    """Where this score falls in the held-out distribution."""
+    ref = bundle.get("reference")
+    if ref is None or len(ref) == 0:
+        return 50.0
+    import numpy as np
+
+    return float((np.asarray(ref) < p).mean() * 100)
+
+
+def _distribution(bundle, frame) -> list[dict]:
+    """Learned four-way distribution, one regressor per outcome, normalised."""
+    outcomes = bundle.get("outcomes") or {}
+    if not outcomes:
+        return []
+    raw = {name: _clip(m.predict(frame)[0]) for name, m in outcomes.items()}
+    total = sum(raw.values())
+    if total <= 0:
+        return []
     return [
         {
             "outcome": name,
-            "label": APPEAL_LABELS[name],
-            "probability": round(prob, 4),
+            "label": APPEAL_LABELS.get(name, name),
+            "probability": round(value / total, 4),
         }
-        for name, prob in sorted(dist.items(), key=lambda kv: -kv[1])
+        for name, value in sorted(raw.items(), key=lambda kv: -kv[1])
     ]
 
 
@@ -169,16 +200,13 @@ def empty_prediction(reason: str) -> dict:
     """Placeholder with the exact key set the reviewer UI reads.
 
     Approved requests never reach Model 2, so their appeal card has nothing to
-    show. Returning nulls in the right shape degrades cleanly; omitting keys
-    would throw in the frontend, which we are not allowed to touch.
+    show. None rather than 0: these surface as an "Appeal risk" column in the
+    request and review lists, where 0 would read as a confident prediction of no
+    appeal rather than a question that was never asked.
     """
     return {
         "top_class": "NOT_CALCULATED",
         "top_label": reason,
-        # None, not 0. These surface as an "Appeal risk" column in the request and
-        # review lists, where 0 would read as a confident prediction of no appeal
-        # rather than a question that was never asked. pct(null) renders "--",
-        # and the denial-rate aggregate in dashboard.py already filters None.
         "top_probability": None,
         "any_appeal_probability": None,
         "distribution": [],
@@ -189,45 +217,33 @@ def empty_prediction(reason: str) -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
-# The assessment
-# ---------------------------------------------------------------------------
-
-
-def assess(report: dict, context: dict | None = None) -> dict:
+def assess(report: dict, features: dict, context: dict | None = None) -> dict:
     """Run the supporting-material assessment on one denied case.
 
-    Returns the routing decision plus an `appeal_prediction` block shaped for the
-    reviewer UI.
+    `report` is Model 1's output and drives the gap split. `features` is the
+    submitted case, which is what the regressor was fitted on.
     """
-    model, _ = _load()
+    bundle = _load()
+    card = _held_out_metrics().get("propensity", {})
 
     try:
-        p = float(model.reappeal_probability(report, context))
-        percentile = float(model.percentile(p))
-        curable, hard = model.gaps(report)
-        criteria = model.criteria_score(report)
-        raises, lowers = model.attribution(report, context)
-    except ModelUnavailable:
-        raise
+        frame = _frame(features, bundle["features"])
+        p = _clip(bundle["propensity"].predict(frame)[0])
+        percentile = _percentile(bundle, p)
+        dist = _distribution(bundle, frame)
     except Exception as exc:
-        raise ModelUnavailable(f"Model 2 assessment failed: {exc}") from exc
+        raise ModelUnavailable(f"Appeal scoring failed: {exc}") from exc
 
-    fixable_rules = [g["rule"] for g in curable]
+    fixable, hard = curability.gaps(report)
+    fixable_rules = [g["rule"] for g in fixable]
     hard_rules = [g["rule"] for g in hard]
 
     # Why the hard gaps are hard. "Hard" is not one thing: a four-week drug trial
     # and an explicit contraindication both land here, and telling a reviewer they
-    # are the same is wrong. Report the classes actually present.
-    _WHY = {
-        "PROCURABLE_SLOW": "need a treatment trial or observation period first",
-        "BEHAVIOURAL": "depend on the patient accepting a treatment they declined",
-        "CLINICAL_FACT": "rest on a measurement no paperwork changes",
-        "CATEGORICAL": "fall under an explicit guideline exclusion",
-    }
+    # are the same is wrong.
     hard_classes = []
     for g in hard:
-        phrase = _WHY.get(g.get("class"))
+        phrase = curability.WHY_HARD.get(g["class"])
         if phrase and phrase not in hard_classes:
             hard_classes.append(phrase)
 
@@ -239,37 +255,31 @@ def assess(report: dict, context: dict | None = None) -> dict:
 
     # Routing, per the decision flow.
     if percentile > MODEL2_REAPPEAL_PERCENTILE:
-        route, reason = (
-            "HUMAN_REVIEW",
+        route = "HUMAN_REVIEW"
+        reason = (
             f"Reappeal risk {p * 100:.1f}% sits in the top "
             f"{100 - percentile:.0f}% of the training population -- this denial is "
-            f"the kind that gets overturned.",
+            f"the kind that gets overturned."
         )
     elif fixable_rules:
-        route, reason = (
-            "HUMAN_REVIEW",
+        route = "HUMAN_REVIEW"
+        reason = (
             f"{len(fixable_rules)} of {len(fixable_rules) + len(hard_rules)} gaps "
             f"can be closed with documentation the provider can obtain in days. "
-            f"Ask before denying.",
+            f"Ask before denying."
         )
     else:
-        route, reason = (
-            "AUTO_DENIED",
-            "No document the provider could send now would change the outcome: "
-            + (
-                "the unmet criteria " + "; ".join(hard_classes) + "."
-                if hard_classes
-                else "no unmet criterion can be closed with documentation."
-            )
-            + (
-                " There is still a resubmission path -- see the checklist."
-                if checklist
-                else ""
-            ),
+        route = "AUTO_DENIED"
+        reason = "No document the provider could send now would change the outcome: " + (
+            "the unmet criteria " + "; ".join(hard_classes) + "."
+            if hard_classes
+            else "no unmet criterion can be closed with documentation."
         )
+        if checklist:
+            reason += " There is still a resubmission path -- see the checklist."
 
-    dist = _distribution(p, len(fixable_rules), len(hard_rules))
-    top = dist[0]
+    top = dist[0] if dist else None
+    base_rate = float(bundle.get("base_rate") or 0.0)
 
     return {
         "route": route,
@@ -277,31 +287,39 @@ def assess(report: dict, context: dict | None = None) -> dict:
         "reappeal_probability": round(p, 4),
         "reappeal_percent": round(p * 100, 1),
         "reappeal_percentile": round(percentile),
-        "reappeal_lift": round(p / model.base_rate, 2) if model.base_rate else None,
-        "criteria_satisfaction": round(criteria, 1) if criteria is not None else None,
+        "reappeal_lift": round(p / base_rate, 2) if base_rate else None,
+        "criteria_satisfaction": _criteria_satisfaction(report),
         "fixable_gaps": fixable_rules,
         "hard_gaps": hard_rules,
         "resubmission_checklist": checklist,
-        "raises_risk": raises,
-        "lowers_risk": lowers,
-        "model_version": getattr(model, "VERSION", "unknown"),
-        "trained_on": getattr(model, "trained_on", "unknown"),
+        "curability_index": round(curability.index([g["class"] for g in fixable + hard]), 4),
+        "model_version": bundle.get("version", "unknown"),
+        "trained_on": bundle.get("trained_on", "unknown"),
         # Shaped for AppealForecast in the reviewer UI.
         "appeal_prediction": {
-            "top_class": top["outcome"],
-            "top_label": top["label"],
-            "top_probability": top["probability"],
+            "top_class": top["outcome"] if top else "NOT_CALCULATED",
+            "top_label": top["label"] if top else "No outcome distribution available",
+            "top_probability": top["probability"] if top else None,
             "any_appeal_probability": round(p, 4),
             "distribution": dist,
-            # macro_auc is the flag the card reads to decide whether to show its
-            # "treat as uninformative" caveat. 0.5 records that this model has no
-            # measured discrimination on real appeal behaviour, which is true --
-            # it was fitted on synthetic labels. The two figures below are its
-            # actual reported numbers: PR-AUC against the positive base rate.
-            "model_macro_auc": MODEL2_REPORTED_MACRO_AUC,
-            "model_accuracy": MODEL2_REPORTED_SCORE,
-            "baseline_accuracy": MODEL2_REPORTED_BASELINE,
-            "trained_on": getattr(model, "trained_on", "unknown"),
+            # macro_auc is the flag the appeal card reads to decide whether to
+            # show its "treat as uninformative" caveat. This is the real held-out
+            # ROC-AUC, and at ~0.54 it correctly trips that warning.
+            "model_macro_auc": card.get("roc_auc"),
+            "model_accuracy": card.get("distribution_argmax_accuracy"),
+            "baseline_accuracy": card.get("majority_class_baseline"),
+            "trained_on": bundle.get("trained_on", "unknown"),
             "assessed": True,
         },
     }
+
+
+def _criteria_satisfaction(report: dict) -> float | None:
+    """Weighted share of guideline criteria met, 0..100, on the same obligation
+    weights ml.approval_likelihood uses."""
+    from .ml import approval_likelihood
+
+    rules = report.get("rules") or []
+    if not rules:
+        return None
+    return round(approval_likelihood(report) * 100, 1)

@@ -225,7 +225,7 @@ def adjudicate(db: Session, req: AuthRequest, actor) -> AuthRequest:
     assessment = None
     if verdict["decision"] == "DENIED" and report is not None:
         try:
-            assessment = model2.assess(report, _model2_context(req, features))
+            assessment = model2.assess(report, features, _model2_context(req, features))
             appeal = assessment["appeal_prediction"]
 
             # Surface the assessment to the reviewer, not just the audit log --
@@ -244,7 +244,7 @@ def adjudicate(db: Session, req: AuthRequest, actor) -> AuthRequest:
                         "fixable_gaps",
                         "hard_gaps",
                         "resubmission_checklist",
-                        "raises_risk",
+                        "curability_index",
                         "model_version",
                         "trained_on",
                     )

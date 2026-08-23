@@ -153,13 +153,20 @@ INCLUDE_GUIDELINE_CRITERIA = os.getenv(
 
 
 # -----------------------------
-# MODEL 2 -- supporting-material assessment (PriorAuthTriage)
+# MODEL 2 -- appeal-propensity regressor (HistGradientBoostingRegressor)
 # -----------------------------
 
 MODEL2_PATH = Path(
     os.getenv(
         "MODEL2_PATH",
-        str(BASE_DIR / "ml" / "models" / "prior_auth_model.py"),
+        str(BASE_DIR / "ml" / "models" / "appeal_propensity.joblib"),
+    )
+)
+
+MODEL2_METRICS_PATH = Path(
+    os.getenv(
+        "MODEL2_METRICS_PATH",
+        str(BASE_DIR / "ml" / "models" / "appeal_metrics.json"),
     )
 )
 
@@ -171,22 +178,4 @@ MODEL2_ENABLED = os.getenv(
 # population goes to a human even when nothing is fixable by documentation.
 MODEL2_REAPPEAL_PERCENTILE = float(
     os.getenv("MODEL2_REAPPEAL_PERCENTILE", "80")
-)
-
-# Reported to the model card and the appeal card. PriorAuthTriage was trained on
-# synthetic labels (n=6000, PR-AUC 0.186 against a 0.090 base rate), so it has no
-# demonstrated discrimination on real appeal behaviour. 0.5 is recorded as the
-# honest stand-in for "no measured skill", which is what makes the reviewer UI
-# show its "treat these probabilities as close to uninformative" caveat.
-# Replace all three once the model is retrained on observed outcomes.
-MODEL2_REPORTED_MACRO_AUC = float(
-    os.getenv("MODEL2_REPORTED_MACRO_AUC", "0.5")
-)
-
-MODEL2_REPORTED_SCORE = float(
-    os.getenv("MODEL2_REPORTED_SCORE", "0.186")
-)
-
-MODEL2_REPORTED_BASELINE = float(
-    os.getenv("MODEL2_REPORTED_BASELINE", "0.090")
 )
