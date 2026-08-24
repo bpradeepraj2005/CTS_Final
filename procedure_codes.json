@@ -1,0 +1,545 @@
+{
+  "direct current cardioversion": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD001",
+    "display": "Direct current cardioversion",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-af"
+    ]
+  },
+  "radiofrequency ablation rfa": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD002",
+    "display": "Radiofrequency ablation (RFA)",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-af"
+    ]
+  },
+  "conversion to normal sinus rhythm": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD003",
+    "display": "Conversion to normal sinus rhythm",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-af"
+    ]
+  },
+  "temporary pacemaker insertion": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD004",
+    "display": "Temporary pacemaker insertion",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-bradyarrhythmia"
+    ]
+  },
+  "permanent pacing": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD005",
+    "display": "Permanent pacing",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-bradyarrhythmia"
+    ]
+  },
+  "implantable cardioverter defibrillator icd": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD006",
+    "display": "Implantable cardioverter defibrillator (ICD)",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-heart-failure"
+    ]
+  },
+  "biventricular pacing crt": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD007",
+    "display": "Biventricular pacing (CRT)",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-heart-failure"
+    ]
+  },
+  "percutaneous coronary intervention pci": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD008",
+    "display": "Percutaneous coronary intervention (PCI)",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-heart-failure"
+    ]
+  },
+  "valve replacement": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD009",
+    "display": "Valve replacement",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-heart-failure"
+    ]
+  },
+  "coronary artery bypass graft cabg": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD010",
+    "display": "Coronary artery bypass graft (CABG)",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-heart-failure"
+    ]
+  },
+  "non-invasive ventilation": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD011",
+    "display": "Non-invasive ventilation",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-heart-failure"
+    ]
+  },
+  "coronary angiography": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD012",
+    "display": "Coronary angiography",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-stable-angina"
+    ]
+  },
+  "revascularization pci or cabg": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD013",
+    "display": "Revascularization (PCI or CABG)",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-stable-angina"
+    ]
+  },
+  "stress imaging": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD014",
+    "display": "Stress imaging",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-stable-angina"
+    ]
+  },
+  "primary pci": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD015",
+    "display": "Primary PCI",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-stemi"
+    ]
+  },
+  "rescue pci": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD016",
+    "display": "Rescue PCI",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-stemi"
+    ]
+  },
+  "routine early pci after successful fibrinolysis": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD017",
+    "display": "Routine early PCI after successful fibrinolysis",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-stemi"
+    ]
+  },
+  "thrombolysis": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD018",
+    "display": "Thrombolysis",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-stemi"
+    ]
+  },
+  "coronary revascularization": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-CARD019",
+    "display": "Coronary revascularization",
+    "specialty": "Cardiology",
+    "record_ids": [
+      "stw-v1-cardio-ua-nstemi"
+    ]
+  },
+  "dialysis hd or pd": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH001",
+    "display": "Dialysis (HD or PD)",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-aki"
+    ]
+  },
+  "kidney biopsy": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH002",
+    "display": "Kidney biopsy",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-aki",
+      "stw-v1-nephro-gn"
+    ]
+  },
+  "peritoneal dialysis at primary care": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH003",
+    "display": "Peritoneal dialysis at primary care",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-aki"
+    ]
+  },
+  "vascular access creation av fistula": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH004",
+    "display": "Vascular access creation (AV fistula)",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-ckd"
+    ]
+  },
+  "pd catheter insertion": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH005",
+    "display": "PD catheter insertion",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-ckd"
+    ]
+  },
+  "kidney transplant work-up": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH006",
+    "display": "Kidney transplant work-up",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-ckd"
+    ]
+  },
+  "dialysis initiation for chronic kidney disease": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH007",
+    "display": "Dialysis initiation for chronic kidney disease",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-ckd"
+    ]
+  },
+  "imaging in uti": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH008",
+    "display": "Imaging in UTI",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-uti"
+    ]
+  },
+  "urology services": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH009",
+    "display": "Urology services",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-uti"
+    ]
+  },
+  "cystoscopy and urodynamics": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH010",
+    "display": "Cystoscopy and urodynamics",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-uti"
+    ]
+  },
+  "paediatric imaging after first uti": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH011",
+    "display": "Paediatric imaging after first UTI",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-uti"
+    ]
+  },
+  "cystoscopy": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH012",
+    "display": "Cystoscopy",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-uti"
+    ]
+  },
+  "urodynamic study": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEPH013",
+    "display": "Urodynamic study",
+    "specialty": "Nephrology",
+    "record_ids": [
+      "stw-v1-nephro-uti"
+    ]
+  },
+  "urethral catheterization": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-URO001",
+    "display": "Urethral catheterization",
+    "specialty": "Urology",
+    "record_ids": [
+      "stw-v1-uro-aur"
+    ]
+  },
+  "suprapubic cystostomy": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-URO002",
+    "display": "Suprapubic cystostomy",
+    "specialty": "Urology",
+    "record_ids": [
+      "stw-v1-uro-aur"
+    ]
+  },
+  "surgery for bph": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-URO003",
+    "display": "Surgery for BPH",
+    "specialty": "Urology",
+    "record_ids": [
+      "stw-v1-uro-aur"
+    ]
+  },
+  "trial without catheter twoc": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-URO004",
+    "display": "Trial without catheter (TWOC)",
+    "specialty": "Urology",
+    "record_ids": [
+      "stw-v1-uro-aur"
+    ]
+  },
+  "surgical stone removal pcnl / urs / eswl": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-URO005",
+    "display": "Surgical stone removal (PCNL / URS / ESWL)",
+    "specialty": "Urology",
+    "record_ids": [
+      "stw-v1-uro-stones"
+    ]
+  },
+  "total abdominal hysterectomy": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG001",
+    "display": "Total abdominal hysterectomy",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-hysterectomy"
+    ]
+  },
+  "vaginal hysterectomy": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG002",
+    "display": "Vaginal hysterectomy",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-hysterectomy"
+    ]
+  },
+  "laparoscopic hysterectomy": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG003",
+    "display": "Laparoscopic hysterectomy",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-hysterectomy"
+    ]
+  },
+  "uterine artery embolization": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG004",
+    "display": "Uterine artery embolization",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-fibroids-polyps",
+      "stw-v1-obg-pph"
+    ]
+  },
+  "myomectomy": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG005",
+    "display": "Myomectomy",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-fibroids-polyps"
+    ]
+  },
+  "hysterectomy": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG006",
+    "display": "Hysterectomy",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-fibroids-polyps",
+      "stw-v1-obg-pph"
+    ]
+  },
+  "hysteroscopic removal": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG007",
+    "display": "Hysteroscopic removal",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-fibroids-polyps"
+    ]
+  },
+  "dilatation and curettage": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG008",
+    "display": "Dilatation and curettage",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-dc"
+    ]
+  },
+  "uterine compression sutures": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG009",
+    "display": "Uterine compression sutures",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-pph"
+    ]
+  },
+  "systematic uterine devascularisation": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG010",
+    "display": "Systematic uterine devascularisation",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-pph"
+    ]
+  },
+  "manual removal of placenta": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-OBG011",
+    "display": "Manual removal of placenta",
+    "specialty": "Obstetrics and Gynaecology",
+    "record_ids": [
+      "stw-v1-obg-pph"
+    ]
+  },
+  "iv thrombolysis with tpa": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEURO001",
+    "display": "IV thrombolysis with tPA",
+    "specialty": "Neurology",
+    "record_ids": [
+      "stw-v1-neuro-stroke"
+    ]
+  },
+  "mechanical thrombectomy with stent retriever": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-NEURO002",
+    "display": "Mechanical thrombectomy with stent retriever",
+    "specialty": "Neurology",
+    "record_ids": [
+      "stw-v1-neuro-stroke"
+    ]
+  },
+  "arterial ligation sphenopalatine or anterior ethmoidal": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-ENT001",
+    "display": "Arterial ligation (sphenopalatine or anterior ethmoidal)",
+    "specialty": "ENT",
+    "record_ids": [
+      "stw-v1-ent-epistaxis"
+    ]
+  },
+  "selective embolization": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-ENT002",
+    "display": "Selective embolization",
+    "specialty": "ENT",
+    "record_ids": [
+      "stw-v1-ent-epistaxis"
+    ]
+  },
+  "digital subtraction angiography": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-ENT003",
+    "display": "Digital subtraction angiography",
+    "specialty": "ENT",
+    "record_ids": [
+      "stw-v1-ent-epistaxis"
+    ]
+  },
+  "cochlear implant": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-ENT004",
+    "display": "Cochlear implant",
+    "specialty": "ENT",
+    "record_ids": [
+      "stw-v1-ent-hearing-impairment-paediatric"
+    ]
+  },
+  "bone anchored hearing aid baha": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-ENT005",
+    "display": "Bone anchored hearing aid (BAHA)",
+    "specialty": "ENT",
+    "record_ids": [
+      "stw-v1-ent-hearing-impairment-paediatric"
+    ]
+  },
+  "surgery for otitis media with effusion": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-ENT006",
+    "display": "Surgery for otitis media with effusion",
+    "specialty": "ENT",
+    "record_ids": [
+      "stw-v1-ent-hearing-impairment-paediatric"
+    ]
+  },
+  "tympanic membrane perforation repair": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-ENT007",
+    "display": "Tympanic membrane perforation repair",
+    "specialty": "ENT",
+    "record_ids": [
+      "stw-v1-ent-hearing-impairment-paediatric"
+    ]
+  },
+  "incision and drainage": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-ENT008",
+    "display": "Incision and drainage",
+    "specialty": "ENT",
+    "record_ids": [
+      "stw-v1-ent-neck-space-infection"
+    ]
+  },
+  "tracheostomy": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-ENT009",
+    "display": "Tracheostomy",
+    "specialty": "ENT",
+    "record_ids": [
+      "stw-v1-ent-neck-space-infection"
+    ]
+  },
+  "tonsillectomy": {
+    "system": "PA-INT-1.0",
+    "code": "PA-INT-ENT010",
+    "display": "Tonsillectomy",
+    "specialty": "ENT",
+    "record_ids": [
+      "stw-v1-ent-pharyngitis"
+    ]
+  }
+}

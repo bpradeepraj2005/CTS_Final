@@ -1,0 +1,13 @@
+# Configurable weights for the criterion scoring model (section 5).
+# Edit and re-run -- no code changes required.
+
+criterion_type_defaults:   # used only by rule_extractor.py for generated criteria
+  gateway: 5
+  exclusion: 0             # exclusion criteria are always weight 0: they gate via
+                            # the terminal "any PASS -> score 0" rule, never the
+                            # weighted average, so a nonzero weight here would be a no-op
+  mandatory: 5
+  contextual: 4             # "blocking judgment" tier
+  supporting_strong: 3
+  supporting_weak: 2
+  documentation_only: 1

@@ -1,0 +1,22 @@
+# The decision table from prior_auth_criterion_scoring.md section 7, as
+# data -- "the system's actual policy," editable without touching
+# scoring_model.py.
+#
+# For each score band: if completeness meets the band's threshold AND
+# there is no blocking information gap, the band's positive_decision
+# applies; otherwise the decision is request_more_information. score == 0
+# and score == null are handled separately in scoring_model.decide()
+# (terminal DENY / RFI cases), never through this table.
+
+score_bands:
+  - {min: 80,    max: 100,    completeness_threshold: 80, positive_decision: approve}
+  - {min: 55,    max: 79.999, completeness_threshold: 70, positive_decision: pend}
+  - {min: 20,    max: 54.999, completeness_threshold: 70, positive_decision: pend}
+  - {min: 0,     max: 19.999, completeness_threshold: 70, positive_decision: pend}
+
+# Invariants enforced in code (scoring_model.enforce_invariants) regardless
+# of what the table above says:
+invariants:
+  - "Never approve with a blocking gap, no matter how high the score."
+  - "Never approve below 80% completeness."
+  - "Never deny on a low score -- only a matched exclusion or a failed gateway denies."

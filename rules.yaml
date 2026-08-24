@@ -1,0 +1,783 @@
+# Curated, hand-verified-against-source criteria table
+# (prior_auth_criterion_scoring.md sections 1-3), for the ~10 highest-
+# density conditions called out in prior_auth_rag_spec.md's appendix. Each
+# criterion is lifted directly from the corpus record's page.
+#
+# This file is the "configurable criteria set": edit thresholds, weights,
+# or types here and re-run the engine -- no code changes required. Every
+# field is documented in prior_auth/rule_engine.py's module docstring.
+#
+# EXCLUSION polarity: a `type: exclusion` criterion's `check` tests whether
+# the excluded scenario IS PRESENT. PASS means the exclusion matches (bad,
+# terminal score 0); FAIL means it doesn't apply (good, no effect). This is
+# the opposite polarity from testing "not excluded" -- get this backwards
+# and an exclusion silently stops gating anything.
+#
+# review_status: this offline build has no scanned page images to check
+# thresholds against (the spec's intended verification step), only this
+# corpus's own JSON text. Every criterion below was cross-checked, field by
+# field, against its source record's raw JSON at authoring time -- a real,
+# disclosed verification pass, just against the corpus text rather than the
+# infographic image -- so these carry `human_verified`. The criteria in
+# rules_generated.yaml were produced programmatically in bulk and were NOT
+# individually reviewed; they correctly stay `unverified`.
+
+criteria:
+
+  # ---------------------------------------------------------------- Hysterectomy (p.38)
+  - criterion_id: C-OBG-HYST-000
+    source_record_id: stw-v1-obg-hysterectomy
+    source_page: 38
+    condition: Hysterectomy for Benign Gynaecological Conditions
+    applies_to:
+      procedure_codes: [PA-INT-OBG001, PA-INT-OBG002, PA-INT-OBG003]
+      icd10_any: []
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: [malignant, malignancy, carcinoma]
+    text: "This STW covers benign gynaecological conditions only; a malignancy-suspected diagnosis is the wrong guideline."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-OBG-HYST-001
+    source_record_id: stw-v1-obg-hysterectomy
+    source_page: 38
+    condition: Hysterectomy for Benign Gynaecological Conditions
+    applies_to:
+      procedure_codes: [PA-INT-OBG001, PA-INT-OBG002, PA-INT-OBG003]
+      icd10_any: []
+    type: exclusion
+    evaluator: deterministic
+    weight: 0
+    check:
+      all:
+        - field: indication_category
+          op: in
+          value: [white_discharge, cervicitis, nonspecific_pelvic_pain, minor_prolapse,
+                   small_asymptomatic_fibroid, simple_ovarian_cyst_small]
+    text: "Conditions for which hysterectomy should NOT be performed: white discharge per vaginum; cervicitis; non specific abdominal or pelvic pain; minor degree of utero vaginal prolapse; fibroids which are small (less than 5 cm) or asymptomatic (less than 12 weeks size uterus); simple ovarian cyst 5 cm or less."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-OBG-HYST-002
+    source_record_id: stw-v1-obg-hysterectomy
+    source_page: 38
+    condition: Hysterectomy for Benign Gynaecological Conditions
+    applies_to:
+      procedure_codes: [PA-INT-OBG001, PA-INT-OBG002, PA-INT-OBG003]
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_category
+          op: in
+          value: [leiomyoma_symptomatic, leiomyoma_asymptomatic_large, leiomyoma_hydroureteronephrosis,
+                   leiomyoma_rapidly_enlarging, submucous_myoma_large, hmb_failed_medical_treatment,
+                   endometriosis_failed_medical_treatment, endometriosis_hydroureteronephrosis,
+                   endometriosis_recurrence, prolapse_3rd_4th_degree,
+                   endometrial_hyperplasia_no_atypia_failed_treatment, endometrial_hyperplasia_atypia,
+                   cin2_poor_compliance, cin3, adnexal_mass, recurrent_postmenopausal_bleeding]
+    text: "Indications for hysterectomy: leiomyoma, heavy menstrual bleeding with failed medical treatment, endometriosis, third/fourth degree prolapse, pre-invasive disease, selected adnexal masses, recurrent post-menopausal bleeding."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-OBG-HYST-003
+    source_record_id: stw-v1-obg-hysterectomy
+    source_page: 38
+    condition: Hysterectomy for Benign Gynaecological Conditions
+    applies_to:
+      procedure_codes: [PA-INT-OBG001, PA-INT-OBG002, PA-INT-OBG003]
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 5
+    check:
+      any:
+        - field: indication_category
+          op: ne
+          value: leiomyoma_asymptomatic_large
+        - field: uterine_size_weeks
+          op: gte
+          value: 14
+    text: "Asymptomatic fibroids greater than or equal to 14 weeks uterine size."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-OBG-HYST-004
+    source_record_id: stw-v1-obg-hysterectomy
+    source_page: 38
+    condition: Hysterectomy for Benign Gynaecological Conditions
+    applies_to:
+      procedure_codes: [PA-INT-OBG001, PA-INT-OBG002, PA-INT-OBG003]
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 4
+    check:
+      any:
+        - field: indication_category
+          op: ne
+          value: submucous_myoma_large
+        - field: submucous_myoma_size_cm
+          op: gt
+          value: 4
+    text: "Submucus myoma greater than 4 cm."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-OBG-HYST-005
+    source_record_id: stw-v1-obg-hysterectomy
+    source_page: 38
+    condition: Hysterectomy for Benign Gynaecological Conditions
+    applies_to:
+      procedure_codes: [PA-INT-OBG001, PA-INT-OBG002, PA-INT-OBG003]
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 5
+    check:
+      any:
+        - field: age
+          op: gte
+          value: 40
+        - field: second_opinion_documentation
+          op: eq
+          value: true
+    text: "In women aged less than 40 and/or low parity it is MANDATORY to have a second opinion from a qualified gynaecologist."
+    version: "1.0"
+    review_status: human_verified
+
+  # ---------------------------------------------------------------- Pharyngitis / Tonsillectomy (p.30)
+  - criterion_id: C-ENT-PHARYNGITIS-000
+    source_record_id: stw-v1-ent-pharyngitis
+    source_page: 30
+    condition: Pharyngitis and Sore Throat
+    applies_to:
+      procedure_codes: [PA-INT-ENT010]
+      icd10_any: [J02]
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: [diphtheria, epiglottitis]
+    text: "Diphtheria and epiglottitis require the emergency airway pathway, not routine pharyngitis/tonsillectomy management."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-ENT-PHARYNGITIS-001
+    source_record_id: stw-v1-ent-pharyngitis
+    source_page: 30
+    condition: Pharyngitis and Sore Throat
+    applies_to:
+      procedure_codes: [PA-INT-ENT010]
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 3
+    check:
+      any:
+        - field: episodes_last_12_months
+          op: gte
+          value: 7
+        - field: episodes_per_year_last_2_years
+          op: gte
+          value: 5
+        - field: episodes_per_year_last_3_years
+          op: gte
+          value: 3
+    text: "Recurrent tonsillitis episodes need to be evaluated for tonsillectomy: more than 7 episodes in previous year, or 5 per year in last two years, or 3 per year in last 3 years."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-ENT-PHARYNGITIS-002
+    source_record_id: stw-v1-ent-pharyngitis
+    source_page: 30
+    condition: Pharyngitis and Sore Throat
+    applies_to:
+      procedure_codes: []
+      icd10_any: [J02]
+    type: supporting
+    evaluator: deterministic
+    weight: 3
+    check:
+      all:
+        - field: centor_score
+          op: gte
+          value: 2
+    text: "Centor score 2-3: requires lab tests to confirm GABHS infection; score 4: likely GABHS, treat with antibiotics without waiting for antigen testing."
+    version: "1.0"
+    review_status: human_verified
+
+  # ---------------------------------------------------------------- Renal and Ureteric Stones (p.59)
+  - criterion_id: C-URO-STONE-000
+    source_record_id: stw-v1-uro-stones
+    source_page: 59
+    condition: Renal and Ureteric Stones
+    applies_to:
+      procedure_codes: [PA-INT-URO005]
+      icd10_any: [N20.0]
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: [tumor, tumour, malignant]
+    text: "This STW covers calculus disease; an obstructing tumour is a different (oncology) pathway."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-URO-STONE-001
+    source_record_id: stw-v1-uro-stones
+    source_page: 59
+    condition: Renal and Ureteric Stones
+    applies_to:
+      procedure_codes: [PA-INT-URO005]
+      icd10_any: [N20.0]
+    type: supporting
+    evaluator: deterministic
+    weight: 3
+    check:
+      all:
+        - field: stone_size_mm
+          op: gt
+          value: 10
+    text: "Kidney or ureteric stone greater than 1 cm: higher centre referral."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-URO-STONE-002
+    source_record_id: stw-v1-uro-stones
+    source_page: 59
+    condition: Renal and Ureteric Stones
+    applies_to:
+      procedure_codes: [PA-INT-URO005]
+      icd10_any: [N20.0]
+    type: mandatory
+    evaluator: deterministic
+    weight: 4
+    check:
+      any:
+        - field: stone_size_mm
+          op: gt
+          value: 10
+        - field: infection_present
+          op: eq
+          value: true
+        - field: obstruction_present
+          op: eq
+          value: true
+        - field: deranged_renal_function
+          op: eq
+          value: true
+        - field: met_trial_duration_weeks
+          op: gte
+          value: 4
+    text: "Medical expulsive therapy indicated for ureteric stones less than 10 mm in the absence of infection, obstruction or deranged renal function; can be tried for up to 4 weeks."
+    version: "1.0"
+    review_status: human_verified
+
+  # ---------------------------------------------------------------- Chronic Kidney Disease (p.31)
+  - criterion_id: C-NEPH-CKD-000
+    source_record_id: stw-v1-nephro-ckd
+    source_page: 31
+    condition: Chronic Kidney Disease
+    applies_to:
+      procedure_codes: [PA-INT-NEPH004, PA-INT-NEPH006, PA-INT-NEPH007]
+      icd10_any: [N18.3]
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: ["acute kidney injury", "aki"]
+    text: "CKD is defined by kidney abnormality present for more than 3 months; acute kidney injury follows a separate STW pathway."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-NEPH-CKD-001
+    source_record_id: stw-v1-nephro-ckd
+    source_page: 31
+    condition: Chronic Kidney Disease
+    applies_to:
+      # icd10 fallback deliberately omitted: NEPH004/006/001 are mutually
+      # exclusive RRT modalities sharing one diagnosis code. Falling back to
+      # icd10 alone would evaluate this fistula criterion against a request
+      # for transplant work-up or dialysis, which was never actually asked
+      # for. See rule_engine.py's applies_to docstring.
+      procedure_codes: [PA-INT-NEPH004]
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: egfr
+          op: lt
+          value: 30
+    text: "eGFR less than 30: preserve veins in the non-dominant arm for AV fistula; discuss RRT options."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-NEPH-CKD-002
+    source_record_id: stw-v1-nephro-ckd
+    source_page: 31
+    condition: Chronic Kidney Disease
+    applies_to:
+      procedure_codes: [PA-INT-NEPH006]  # icd10 fallback omitted -- see C-NEPH-CKD-001
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: egfr
+          op: lt
+          value: 15
+    text: "eGFR less than 15: may need dialysis soon; counsel for AV fistula, list for transplant."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-NEPH-CKD-003
+    source_record_id: stw-v1-nephro-ckd
+    source_page: 31
+    condition: Chronic Kidney Disease
+    applies_to:
+      # A DEDICATED code (PA-INT-NEPH007), not PA-INT-NEPH001. AKI's own
+      # "Dialysis (HD or PD)" entry (PA-INT-NEPH001) is a different service
+      # with different criteria -- see C-NEPH-AKI-001. Sharing one code
+      # between them let an acute dialysis request get wrongly evaluated
+      # against this chronic eGFR threshold.
+      procedure_codes: [PA-INT-NEPH007]
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 5
+    check:
+      any:
+        - field: egfr
+          op: lt
+          value: 5
+        - field: dialysis_symptom_indication
+          op: eq
+          value: true
+    text: "Dialysis start depends on symptoms or eGFR less than 5 ml/min."
+    version: "1.0"
+    review_status: human_verified
+
+  # ---------------------------------------------------------------- Acute Kidney Injury (p.30)
+  - criterion_id: C-NEPH-AKI-000
+    source_record_id: stw-v1-nephro-aki
+    source_page: 30
+    condition: Acute Kidney Injury
+    applies_to:
+      procedure_codes: [PA-INT-NEPH001]
+      icd10_any: [N17.9]
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: ["chronic kidney disease", "ckd", "esrd", "end stage renal"]
+    text: "This STW covers acute kidney injury; established chronic kidney disease follows the separate CKD pathway, where dialysis initiation is eGFR-gated rather than indication-gated."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-NEPH-AKI-001
+    source_record_id: stw-v1-nephro-aki
+    source_page: 30
+    condition: Acute Kidney Injury
+    applies_to:
+      procedure_codes: [PA-INT-NEPH001]
+      icd10_any: [N17.9]
+    type: mandatory
+    evaluator: deterministic
+    weight: 5
+    check:
+      any:
+        - field: fluid_overload
+          op: eq
+          value: true
+        - field: pericarditis
+          op: eq
+          value: true
+        - field: hyperkalemia
+          op: eq
+          value: true
+        - field: severe_metabolic_acidosis
+          op: eq
+          value: true
+        - field: encephalopathy
+          op: eq
+          value: true
+        - field: severe_uraemia
+          op: eq
+          value: true
+        - field: need_dialysis_access_for_fluids_or_blood
+          op: eq
+          value: true
+    text: "Dialysis in AKI has a closed indication list of seven items -- fluid overload, pericarditis, hyperkalemia, severe metabolic acidosis, encephalopathy, severe uraemia, or the need to create space for fluids or blood products; a request without at least one is deniable."
+    version: "1.0"
+    review_status: human_verified
+
+  # ---------------------------------------------------------------- Stroke (p.35)
+  - criterion_id: C-NEURO-STROKE-000
+    source_record_id: stw-v1-neuro-stroke
+    source_page: 35
+    condition: Stroke
+    applies_to:
+      procedure_codes: [PA-INT-NEURO001, PA-INT-NEURO002]
+      icd10_any: [I63, I64]
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: [traumatic, trauma]
+    text: "Intracerebral haemorrhage is defined as not caused by trauma; a traumatic bleed follows a neurosurgical trauma pathway, not this STW."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-NEURO-STROKE-001
+    source_record_id: stw-v1-neuro-stroke
+    source_page: 35
+    condition: Stroke
+    applies_to:
+      # icd10 fallback deliberately omitted: tPA and thrombectomy are
+      # mutually exclusive procedures sharing one diagnosis code. See
+      # C-NEPH-CKD-001's comment for the general reasoning.
+      procedure_codes: [PA-INT-NEURO001]
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 4
+    check:
+      all:
+        - field: hours_from_onset
+          op: lte
+          value: 4.5
+        - field: ct_or_mri_done
+          op: eq
+          value: true
+    text: "Stroke onset time less than 4.5 hours: IV tPA (0-4.5 hrs) according to eligibility and availability. Not authorised without prior noncontrast CT/MRI."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-NEURO-STROKE-002
+    source_record_id: stw-v1-neuro-stroke
+    source_page: 35
+    condition: Stroke
+    applies_to:
+      procedure_codes: [PA-INT-NEURO002]  # icd10 fallback omitted -- see C-NEURO-STROKE-001
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 4
+    check:
+      all:
+        - field: hours_from_onset
+          op: gte
+          value: 4.5
+        - field: hours_from_onset
+          op: lte
+          value: 24
+        - field: ct_or_mri_done
+          op: eq
+          value: true
+    text: "Endovascular treatment with mechanical thrombectomy using stent retriever (4.5 hrs to 24 hrs) according to eligibility."
+    version: "1.0"
+    review_status: human_verified
+
+  # ---------------------------------------------------------------- Psychosis / Clozapine (p.56)
+  - criterion_id: C-PSY-PSYCHOSIS-000
+    source_record_id: stw-v1-psych-psychosis
+    source_page: 56
+    condition: Psychosis
+    applies_to:
+      procedure_codes: []
+      icd10_any: ["F20-F29"]
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: [delirium, "substance-induced", intoxication]
+    text: "Substance-induced psychosis and delirium follow a different management pathway from the primary psychosis STW."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-PSY-PSYCHOSIS-001
+    source_record_id: stw-v1-psych-psychosis
+    source_page: 56
+    condition: Psychosis
+    applies_to:
+      procedure_codes: []
+      icd10_any: ["F20-F29"]
+    type: mandatory
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: failed_antipsychotic_trials
+          op: gte
+          value: 2
+        - field: organic_cause_excluded
+          op: eq
+          value: true
+    text: "Clozapine rule: inadequate effect for 2 or more antipsychotics, after investigating for medical or neurological causes of non-response and treating them, and no cause found or poor response despite treatment of the cause."
+    version: "1.0"
+    review_status: human_verified
+
+  # ---------------------------------------------------------------- Dengue Fever (p.45)
+  - criterion_id: C-PAED-DENGUE-000
+    source_record_id: stw-v1-paed-dengue
+    source_page: 45
+    condition: Dengue Fever
+    applies_to:
+      procedure_codes: []
+      icd10_any: [A90]
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: ["immune thrombocytopenia", "itp", leukemia]
+    text: "Primary haematologic disorders (ITP, leukaemia) causing thrombocytopenia follow a haematology pathway, not the dengue STW."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-PAED-DENGUE-001
+    source_record_id: stw-v1-paed-dengue
+    source_page: 45
+    condition: Dengue Fever
+    applies_to:
+      procedure_codes: []
+      icd10_any: [A90]
+    type: mandatory
+    evaluator: deterministic
+    weight: 5
+    check:
+      any:
+        - field: platelet_count
+          op: lt
+          value: 10000
+        - field: active_bleeding
+          op: eq
+          value: true
+        - field: prolonged_shock
+          op: eq
+          value: true
+    text: "Prophylactic platelet transfusion if platelet count less than 10,000/cumm; also indicated for prolonged shock or systemic massive bleeding."
+    version: "1.0"
+    review_status: human_verified
+
+  # ---------------------------------------------------------------- Fever in Children (p.46)
+  - criterion_id: C-PAED-FEVER-000
+    source_record_id: stw-v1-paed-fever
+    source_page: 46
+    condition: Fever in Children
+    applies_to:
+      procedure_codes: []
+      icd10_any: [R50]
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: ["septic shock"]
+    text: "A child in septic shock follows the sepsis/septic-shock STW, not the routine fever-investigation tiers."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-PAED-FEVER-001
+    source_record_id: stw-v1-paed-fever
+    source_page: 46
+    condition: Fever in Children
+    applies_to:
+      procedure_codes: []
+      icd10_any: [R50]
+    type: mandatory
+    evaluator: deterministic
+    weight: 3
+    check:
+      any:
+        - field: investigation_tier_requested
+          op: ne
+          value: blood_culture_serology
+        - field: fever_duration_hours
+          op: gte
+          value: 72
+    text: "If fever more than 72 hours: TLC, DLC, peripheral smear, malarial parasite, platelet count; NS1/dengue IgM and blood culture as desirable investigations."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-PAED-FEVER-002
+    source_record_id: stw-v1-paed-fever
+    source_page: 46
+    condition: Fever in Children
+    applies_to:
+      procedure_codes: []
+      icd10_any: [R50]
+    type: mandatory
+    evaluator: deterministic
+    weight: 3
+    check:
+      any:
+        - field: investigation_tier_requested
+          op: ne
+          value: imaging_advanced
+        - field: fever_duration_hours
+          op: gte
+          value: 168
+    text: "More than 7 days, fever alone or without localizing symptoms: imaging, bone marrow, ANA profile, HIV serology and PET scan become desirable/optional investigations."
+    version: "1.0"
+    review_status: human_verified
+
+  # ---------------------------------------------------------------- Heart Failure / CRT (p.14)
+  - criterion_id: C-CARD-HF-000
+    source_record_id: stw-v1-cardio-heart-failure
+    source_page: 14
+    condition: Heart Failure (Breathless Patient)
+    applies_to:
+      procedure_codes: [PA-INT-CARD007]
+      icd10_any: [I50.9]
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: ["reversible cause", temporary]
+    text: "Device therapy is considered after optimal medical therapy for an established cardiomyopathy, not for heart failure from a reversible/temporary cause."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-CARD-HF-CRT-001
+    source_record_id: stw-v1-cardio-heart-failure
+    source_page: 14
+    condition: Heart Failure (Breathless Patient)
+    applies_to:
+      procedure_codes: [PA-INT-CARD007]
+      icd10_any: [I50.9]
+    type: mandatory
+    evaluator: deterministic
+    weight: 5
+    check:
+      all:
+        - field: nyha_class
+          op: in
+          value: [2, 3]
+        - field: ejection_fraction_pct
+          op: lt
+          value: 35
+        - field: qrs_duration_ms
+          op: gt
+          value: 150
+        - field: lbbb_morphology
+          op: eq
+          value: true
+        - field: rhythm
+          op: eq
+          value: sinus
+        - field: omt_duration_months
+          op: gte
+          value: 3
+    text: "Biventricular pacing (CRT): NYHA class II or III symptomatic patient AND EF less than 35 percent AND QRS greater than 150 msec in sinus rhythm with LBBB morphology AND optimal medical therapy for more than 3 months."
+    version: "1.0"
+    review_status: human_verified
+
+  # ---------------------------------------------------------------- Acute Urinary Retention (p.56)
+  - criterion_id: C-URO-AUR-000
+    source_record_id: stw-v1-uro-aur
+    source_page: 56
+    condition: Acute Urinary Retention in Men
+    applies_to:
+      procedure_codes: [PA-INT-URO003, PA-INT-NEPH011, PA-INT-NEPH009]
+      icd10_any: [R33.9]
+    type: gateway
+    evaluator: deterministic
+    weight: 5
+    applicable_if:
+      all:
+        - field: sex
+          op: ne
+          value: F
+    check:
+      all:
+        - field: indication_text
+          op: not_contains_any
+          value: ["fecal impaction", "faecal impaction"]
+    text: "Retention with fecal impaction as the sole documented cause is managed by disimpaction, not urological workup. This record is scoped to 'Acute Urinary Retention in Men'; a female patient makes the whole condition not applicable rather than a failed criterion."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-URO-AUR-001
+    source_record_id: stw-v1-uro-aur
+    source_page: 56
+    condition: Acute Urinary Retention in Men
+    applies_to:
+      # icd10 fallback deliberately omitted: BPH surgery and the
+      # not-routine imaging exclusion (C-URO-AUR-002) are different
+      # services sharing one diagnosis code. See C-NEPH-CKD-001's comment.
+      procedure_codes: [PA-INT-URO003]
+      icd10_any: []
+    type: mandatory
+    evaluator: deterministic
+    weight: 4
+    check:
+      any:
+        - field: prior_recurrent_retention
+          op: eq
+          value: true
+        - field: severe_luts
+          op: eq
+          value: true
+        - field: twoc_outcome
+          op: eq
+          value: fail
+    text: "Surgery for BPH: spontaneous AUR due to BPH with prior history of recurrent acute retention or severe obstructive LUTS, or failed trial without catheter after 2-4 days of alpha blockers."
+    version: "1.0"
+    review_status: human_verified
+
+  - criterion_id: C-URO-AUR-002
+    source_record_id: stw-v1-uro-aur
+    source_page: 56
+    condition: Acute Urinary Retention in Men
+    applies_to:
+      procedure_codes: [PA-INT-NEPH011, PA-INT-NEPH009]  # icd10 fallback omitted -- see C-URO-AUR-001
+      icd10_any: []
+    type: exclusion
+    evaluator: deterministic
+    weight: 0
+    check:
+      all:
+        - field: specialist_justification_documented
+          op: ne
+          value: true
+    text: "Cystoscopy, CT/MRI, RGU plus MCU, urodynamic studies -- only by specialists, NOT to be done routinely."
+    version: "1.0"
+    review_status: human_verified
