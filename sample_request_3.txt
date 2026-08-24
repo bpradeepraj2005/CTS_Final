@@ -1,0 +1,36 @@
+PRIOR AUTHORIZATION REQUEST
+Ref: PA/2026/70925
+Date: 22 August 2026
+
+PATIENT
+Age: 64 years        Sex: Male
+
+HISTORY
+Known ischaemic cardiomyopathy following an anterior myocardial infarction
+three years ago. Breathless on moderate exertion. The referring physician has
+recorded functional status as "NYHA class II to III depending on the day".
+Patient reports he can still walk to the local shop but not uphill.
+
+CURRENT THERAPY
+Enalapril, carvedilol, spironolactone and furosemide. The family says these
+were started at the district hospital "around the beginning of June", and
+doses were last uptitrated four weeks ago. No pharmacy record enclosed.
+
+INVESTIGATIONS
+Echocardiogram (11 Aug 2026, this centre): left ventricular ejection fraction
+reported as 35 percent. Moderate mitral regurgitation. No significant
+valvular stenosis.
+ECG (11 Aug 2026): QRS duration 148 ms. Broad notched R waves in lateral
+leads. An earlier ECG done at another hospital was reported verbally as
+showing "left bundle branch block" but that tracing is not enclosed.
+Rhythm strip not attached with the current ECG.
+
+VITALS
+BP 118/74. Heart rate 78/min. Respiratory rate 18/min. SpO2 96% room air.
+
+REQUESTED SERVICE
+Biventricular pacing (cardiac resynchronisation therapy) device implantation.
+Tertiary cardiac centre.
+
+DOCUMENTS ATTACHED
+Echocardiogram report, current ECG, discharge summary from index MI.

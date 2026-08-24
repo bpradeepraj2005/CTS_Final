@@ -1,0 +1,22 @@
+# Render Blueprint. In the dashboard: New -> Blueprint -> pick this repo, and
+# the service below is created already configured.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: prior-auth-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    # /health needs no auth and returns 200 as soon as the corpus is loaded.
+    healthCheckPath: /health
+    envVars:
+      # Uncomment and set a long random string to require
+      # `Authorization: Bearer <token>` on every data endpoint.
+      # - key: API_TOKEN
+      #   generateValue: true
+
+      # Free instances have no persistent disk, so the audit log is wiped on
+      # every restart and deploy. /tmp makes that explicit rather than
+      # surprising; drop this to keep writing to prior_auth/data/.
+      - key: PA_AUDIT_LOG
+        value: /tmp/audit_log.jsonl
