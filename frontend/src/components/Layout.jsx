@@ -22,7 +22,25 @@ import {
 
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { themeFor } from "../lib/portalTheme";
 
+
+/* =========================================================
+   PORTAL SHELL
+
+   The chrome — header, sidebar, chat widget — is dark on both
+   portals; the accent hue is what tells them apart (violet for
+   the hospital side, blue for the payer side). Colours come
+   from src/lib/portalTheme.js so the dashboards inside can
+   paint against exactly the same palette.
+
+   The full-bleed page background is painted here, once, on the
+   shell root — every page inside <Outlet /> draws its panels on
+   top of it rather than carrying a background of its own. That
+   keeps the gutter around the content column the same colour as
+   the content area, which a page background applied from inside
+   <main>'s padding cannot do.
+   ========================================================= */
 
 export default function Layout({ portal, nav }) {
   const { user, logout, refresh } = useAuth();
@@ -30,12 +48,11 @@ export default function Layout({ portal, nav }) {
 
   const [busy, setBusy] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [signOutHot, setSignOutHot] = useState(false);
 
   const isPayer = portal === "payer";
 
-  const mark = isPayer
-    ? "bg-payer"
-    : "bg-provider";
+  const t = themeFor(portal);
 
 
   /* =====================================================
@@ -86,14 +103,41 @@ export default function Layout({ portal, nav }) {
   };
 
 
+  /* Shared look for the small square chrome buttons. */
+  const chromeButton = {
+    background: t.panel,
+    borderColor: t.line,
+    color: t.text2,
+  };
+
+  const dangerHover = {
+    background: "rgba(244,63,94,0.14)",
+    borderColor: "rgba(251,113,133,0.35)",
+    color: "#FB7185",
+  };
+
+
   return (
-    <div className="min-h-screen bg-canvas">
+    <div
+      className="min-h-screen"
+      style={{
+        background: t.page,
+        backgroundSize: "cover",
+        backgroundAttachment: "fixed",
+      }}
+    >
 
       {/* =================================================
           HEADER
          ================================================= */}
 
-      <header className="sticky top-0 z-40 border-b border-rule bg-white/90 backdrop-blur-xl">
+      <header
+        className="sticky top-0 z-40 border-b backdrop-blur-xl"
+        style={{
+          background: t.headerBg,
+          borderColor: t.line,
+        }}
+      >
 
         <div className="flex h-16 items-center justify-between px-4 lg:px-6">
 
@@ -102,7 +146,8 @@ export default function Layout({ portal, nav }) {
 
             {/* MOBILE MENU */}
             <button
-              className="grid h-10 w-10 place-items-center rounded-lg border border-rule bg-white text-ink-2 lg:hidden"
+              className="grid h-10 w-10 place-items-center rounded-lg border transition-colors lg:hidden"
+              style={chromeButton}
               onClick={() => setMobileOpen(true)}
               aria-label="Open navigation"
             >
@@ -114,11 +159,11 @@ export default function Layout({ portal, nav }) {
             <div className="flex items-center gap-3">
 
               <div
-                className={`grid h-10 w-10 place-items-center rounded-xl text-white shadow-lg ${
-                  isPayer
-                    ? "bg-payer shadow-payer/20"
-                    : "bg-provider shadow-provider/20"
-                }`}
+                className="grid h-10 w-10 place-items-center rounded-xl text-white"
+                style={{
+                  backgroundImage: `linear-gradient(135deg, ${t.accent}, ${t.accentDeep})`,
+                  boxShadow: `0 10px 26px -10px ${t.accentGlow}`,
+                }}
               >
                 <ShieldCheck size={20} />
               </div>
@@ -126,11 +171,17 @@ export default function Layout({ portal, nav }) {
 
               <div className="hidden sm:block">
 
-                <div className="text-sm font-bold tracking-tight">
+                <div
+                  className="text-sm font-bold tracking-tight"
+                  style={{ color: t.text }}
+                >
                   PriorAuth AI
                 </div>
 
-                <div className="text-[10px] font-medium uppercase tracking-[.12em] text-ink-3">
+                <div
+                  className="text-[10px] font-medium uppercase tracking-[.12em]"
+                  style={{ color: t.text3 }}
+                >
 
                   {isPayer
                     ? "Payer intelligence"
@@ -159,11 +210,20 @@ export default function Layout({ portal, nav }) {
               <button
                 onClick={toggleAvailability}
                 disabled={busy}
-                className={`hidden items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition sm:flex ${
+                className="hidden items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition disabled:opacity-60 sm:flex"
+                style={
                   user.is_available
-                    ? "border-approve-line bg-approve-soft text-approve"
-                    : "border-rule bg-slate-50 text-ink-2"
-                }`}
+                    ? {
+                        background: "rgba(16,185,129,0.12)",
+                        borderColor: "rgba(52,211,153,0.30)",
+                        color: "#34D399",
+                      }
+                    : {
+                        background: t.panel,
+                        borderColor: t.line,
+                        color: t.text3,
+                      }
+                }
               >
 
                 {user.is_available ? (
@@ -184,7 +244,8 @@ export default function Layout({ portal, nav }) {
             {/* NOTIFICATIONS */}
 
             <button
-              className="grid h-10 w-10 place-items-center rounded-lg border border-rule bg-white text-ink-2 hover:bg-slate-50"
+              className="grid h-10 w-10 place-items-center rounded-lg border transition-colors"
+              style={chromeButton}
               title="Notifications"
             >
               <Bell size={17} />
@@ -198,7 +259,10 @@ export default function Layout({ portal, nav }) {
               <div className="hidden items-center gap-2 pl-2 sm:flex">
 
                 <div
-                  className={`grid h-9 w-9 place-items-center rounded-full text-xs font-bold text-white ${mark}`}
+                  className="grid h-9 w-9 place-items-center rounded-full text-xs font-bold text-white"
+                  style={{
+                    backgroundImage: `linear-gradient(135deg, ${t.accent}, ${t.accentDeep})`,
+                  }}
                 >
                   {user.full_name
                     ?.charAt(0)
@@ -208,11 +272,17 @@ export default function Layout({ portal, nav }) {
 
                 <div className="max-w-[150px]">
 
-                  <div className="truncate text-xs font-semibold">
+                  <div
+                    className="truncate text-xs font-semibold"
+                    style={{ color: t.text }}
+                  >
                     {user.full_name}
                   </div>
 
-                  <div className="truncate text-[10px] text-ink-3">
+                  <div
+                    className="truncate text-[10px]"
+                    style={{ color: t.text3 }}
+                  >
                     {user.organization_name}
                   </div>
 
@@ -221,7 +291,7 @@ export default function Layout({ portal, nav }) {
 
                 <ChevronDown
                   size={14}
-                  className="text-ink-3"
+                  style={{ color: t.text3 }}
                 />
 
               </div>
@@ -233,7 +303,14 @@ export default function Layout({ portal, nav }) {
 
             <button
               onClick={handleLogout}
-              className="grid h-10 w-10 place-items-center rounded-lg border border-rule bg-white text-ink-3 hover:bg-red-50 hover:text-deny"
+              onMouseEnter={() => setSignOutHot(true)}
+              onMouseLeave={() => setSignOutHot(false)}
+              className="grid h-10 w-10 place-items-center rounded-lg border transition-colors"
+              style={
+                signOutHot
+                  ? dangerHover
+                  : chromeButton
+              }
               title="Sign out"
             >
               <LogOut size={16} />
@@ -257,7 +334,15 @@ export default function Layout({ portal, nav }) {
             DESKTOP SIDEBAR
            ================================================= */}
 
-        <aside className="sidebar-gradient sticky top-16 hidden h-[calc(100vh-64px)] w-64 shrink-0 border-r border-rule lg:block">
+        <aside
+          className="sticky top-16 hidden h-[calc(100vh-64px)] w-64 shrink-0 border-r lg:block"
+          style={{
+            background: t.sidebar,
+            backgroundAttachment: "fixed",
+            backgroundSize: "cover",
+            borderColor: t.line,
+          }}
+        >
 
           <Sidebar
             nav={nav}
@@ -279,25 +364,39 @@ export default function Layout({ portal, nav }) {
             {/* OVERLAY */}
 
             <div
-              className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
+              className="absolute inset-0 backdrop-blur-sm"
+              style={{ background: "rgba(2,4,10,0.66)" }}
               onClick={() => setMobileOpen(false)}
             />
 
 
             {/* SIDEBAR */}
 
-            <aside className="relative h-full w-80 bg-white shadow-elevated">
+            <aside
+              className="relative h-full w-80 shadow-elevated"
+              style={{
+                background: t.sidebar,
+                backgroundSize: "cover",
+              }}
+            >
 
-              <div className="flex h-16 items-center justify-between border-b border-rule px-5">
+              <div
+                className="flex h-16 items-center justify-between border-b px-5"
+                style={{ borderColor: t.line }}
+              >
 
-                <div className="font-bold">
+                <div
+                  className="font-bold"
+                  style={{ color: t.text }}
+                >
                   Navigation
                 </div>
 
 
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-rule"
+                  className="grid h-9 w-9 place-items-center rounded-lg border"
+                  style={chromeButton}
                   aria-label="Close navigation"
                 >
                   <X size={17} />
@@ -363,24 +462,44 @@ function Sidebar({
 
   const isPayer = portal === "payer";
 
+  const t = themeFor(portal);
+
+  /* NavLink's className callback can't reach a hover state, so
+     the non-active hover tint rides on inline handlers instead
+     of a Tailwind `hover:` class — the panel colours are
+     per-portal values, not utility classes. */
+  const [hovered, setHovered] = useState(null);
+
 
   return (
 
-    <div className="flex h-full flex-col px-3 py-5">
+    <div className="flex h-full flex-col overflow-y-auto px-3 py-5">
 
 
       {/* =================================================
           WORKSPACE
          ================================================= */}
 
-      <div className="mb-5 rounded-xl bg-slate-50 p-4">
+      <div
+        className="mb-5 rounded-xl border p-4 backdrop-blur-sm"
+        style={{
+          background: t.panel,
+          borderColor: t.line,
+        }}
+      >
 
-        <div className="text-[10px] font-semibold uppercase tracking-[.13em] text-ink-3">
+        <div
+          className="text-[10px] font-semibold uppercase tracking-[.13em]"
+          style={{ color: t.text3 }}
+        >
           Workspace
         </div>
 
 
-        <div className="mt-2 text-sm font-bold">
+        <div
+          className="mt-2 text-sm font-bold"
+          style={{ color: t.text }}
+        >
 
           {isPayer
             ? "Payer operations"
@@ -389,7 +508,10 @@ function Sidebar({
         </div>
 
 
-        <div className="mt-1 text-xs text-ink-3">
+        <div
+          className="mt-1 text-xs"
+          style={{ color: t.text3 }}
+        >
 
           {user?.organization_name ||
             "Organization"}
@@ -431,15 +553,29 @@ function Sidebar({
               to={item.to}
               end={item.end}
               onClick={onNavigate}
+              onMouseEnter={() => setHovered(item.to)}
+              onMouseLeave={() => setHovered(null)}
 
-              className={({ isActive }) =>
-                `group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition ${
-                  isActive
-                    ? isPayer
-                      ? "bg-payer-soft text-payer"
-                      : "bg-provider-soft text-provider"
-                    : "text-ink-2 hover:bg-slate-100 hover:text-ink"
-                }`
+              className="group relative flex items-center gap-3 rounded-lg border px-3 py-2.5 text-[13px] font-semibold transition"
+
+              style={({ isActive }) =>
+                isActive
+                  ? {
+                      background: t.accentSoft,
+                      borderColor: t.accentLine,
+                      color: t.accentBright,
+                    }
+                  : {
+                      background:
+                        hovered === item.to
+                          ? t.panelHover
+                          : "transparent",
+                      borderColor: "transparent",
+                      color:
+                        hovered === item.to
+                          ? t.text
+                          : t.text2,
+                    }
               }
             >
 
@@ -469,7 +605,12 @@ function Sidebar({
               {isReviewQueue && (
 
                 <span
-                  className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700"
+                  className="flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide"
+                  style={{
+                    background: "rgba(245,158,11,0.14)",
+                    borderColor: "rgba(251,191,36,0.32)",
+                    color: "#FBBF24",
+                  }}
                   title="Cases requiring human review"
                 >
                   <AlertTriangle size={10} />
@@ -495,11 +636,23 @@ function Sidebar({
 
       {isPayer && (
 
-        <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+        <div
+          className="mt-5 rounded-xl border p-4"
+          style={{
+            background: "rgba(245,158,11,0.09)",
+            borderColor: "rgba(251,191,36,0.26)",
+          }}
+        >
 
           <div className="flex items-center gap-2">
 
-            <div className="grid h-7 w-7 place-items-center rounded-lg bg-amber-100 text-amber-700">
+            <div
+              className="grid h-7 w-7 place-items-center rounded-lg"
+              style={{
+                background: "rgba(245,158,11,0.18)",
+                color: "#FCD34D",
+              }}
+            >
 
               <ListChecks size={15} />
 
@@ -508,11 +661,17 @@ function Sidebar({
 
             <div>
 
-              <div className="text-xs font-bold text-amber-900">
+              <div
+                className="text-xs font-bold"
+                style={{ color: "#FCD34D" }}
+              >
                 Human Review
               </div>
 
-              <div className="text-[10px] text-amber-700">
+              <div
+                className="text-[10px]"
+                style={{ color: "rgba(252,211,77,0.72)" }}
+              >
                 Priority-based cases
               </div>
 
@@ -521,7 +680,10 @@ function Sidebar({
           </div>
 
 
-          <p className="mt-3 text-[10px] leading-4 text-amber-800">
+          <p
+            className="mt-3 text-[10px] leading-4"
+            style={{ color: "rgba(253,230,138,0.68)" }}
+          >
 
             AI-flagged requests requiring human
             verification are organized in the
@@ -538,26 +700,38 @@ function Sidebar({
           HELP
          ================================================= */}
 
-      <div className="mt-auto rounded-xl border border-rule bg-white p-4">
+      <div
+        className="mt-auto rounded-xl border p-4 backdrop-blur-sm"
+        style={{
+          background: t.panel,
+          borderColor: t.line,
+        }}
+      >
 
         <div className="flex items-center gap-2">
 
           <div
-            className={`h-2 w-2 rounded-full ${
-              isPayer
-                ? "bg-payer"
-                : "bg-provider"
-            }`}
+            className="h-2 w-2 rounded-full"
+            style={{
+              background: t.accent,
+              boxShadow: `0 0 10px ${t.accent}`,
+            }}
           />
 
-          <span className="text-xs font-semibold">
+          <span
+            className="text-xs font-semibold"
+            style={{ color: t.text }}
+          >
             Need help?
           </span>
 
         </div>
 
 
-        <p className="mt-2 text-[10px] leading-4 text-ink-3">
+        <p
+          className="mt-2 text-[10px] leading-4"
+          style={{ color: t.text3 }}
+        >
 
           Upload your documents and we'll help
           you complete the request.

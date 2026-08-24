@@ -535,7 +535,8 @@ export default function NewRequest() {
     extraction?.missing_required || []
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
+    <div>
+      <div className="mx-auto max-w-5xl space-y-5">
       <Link
         to="/hospital"
         className="inline-flex items-center gap-1.5 text-[13px] text-ink-3 hover:text-ink"
@@ -570,10 +571,10 @@ export default function NewRequest() {
         eyebrow="Step 1"
         title="Upload hospital authorization PDF"
       >
-        <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-ruleStrong bg-canvas px-6 py-10 text-center hover:bg-surface">
+        <label className="upload-zone flex cursor-pointer flex-col items-center justify-center px-6 py-10 text-center">
           <Upload
             size={26}
-            className="text-provider"
+            className="text-provider-deep"
           />
 
           <div className="mt-3 text-sm font-medium">
@@ -600,7 +601,7 @@ export default function NewRequest() {
           <div className="mt-4 flex items-center gap-2 rounded-md border border-rule bg-canvas px-3 py-2.5">
             <FileText
               size={16}
-              className="text-provider"
+              className="text-provider-deep"
             />
 
             <div className="min-w-0 flex-1">
@@ -1614,6 +1615,7 @@ export default function NewRequest() {
           </button>
         </div>
       </form>
+      </div>
     </div>
   )
 }
@@ -1670,7 +1672,7 @@ function CheckField({
         onChange={(e) =>
           onChange(e.target.checked)
         }
-        className="h-4 w-4 accent-sky-700"
+        className="h-4 w-4 accent-provider"
       />
 
       <span className="text-[13px]">

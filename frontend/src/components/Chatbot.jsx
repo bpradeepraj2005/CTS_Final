@@ -8,9 +8,17 @@ import {
 } from 'lucide-react'
 
 import { api } from '../lib/api'
+import { themeFor } from '../lib/portalTheme'
 
 export default function Chatbot({ portal }) {
   const isPayer = portal === 'payer'
+
+  /* Dark chrome, accented per portal — violet on the hospital
+     side, blue on the payer side. Matches Layout. */
+  const t = themeFor(portal)
+
+  const surface = isPayer ? '#0A1223' : '#120C20'
+  const surfaceAlt = isPayer ? '#0C1728' : '#160F28'
 
   const [open, setOpen] = useState(false)
 
@@ -232,11 +240,11 @@ export default function Chatbot({ portal }) {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-elevated transition hover:scale-105 ${
-            isPayer
-              ? 'bg-payer hover:bg-payer-deep'
-              : 'bg-provider hover:bg-provider-deep'
-          }`}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white transition hover:scale-105"
+          style={{
+            backgroundImage: `linear-gradient(135deg, ${t.accent}, ${t.accentDeep})`,
+            boxShadow: `0 18px 40px -14px ${t.accentGlow}`,
+          }}
         >
           <MessageCircle size={18} />
           Need help?
@@ -248,18 +256,24 @@ export default function Chatbot({ portal }) {
           ================================================= */}
 
       {open && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[560px] w-[370px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-2xl border border-rule bg-white shadow-elevated">
+        <div
+          className="fixed bottom-6 right-6 z-50 flex h-[560px] w-[370px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-2xl border"
+          style={{
+            background: surface,
+            borderColor: t.lineStrong,
+            boxShadow: '0 30px 70px -20px rgba(0,0,0,0.85)',
+          }}
+        >
 
           {/* =================================================
               HEADER
               ================================================= */}
 
           <div
-            className={`flex items-center justify-between px-4 py-3 text-white ${
-              isPayer
-                ? 'bg-payer'
-                : 'bg-provider'
-            }`}
+            className="flex items-center justify-between px-4 py-3 text-white"
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${t.accent}, ${t.accentDeep})`,
+            }}
           >
             <div className="flex items-center gap-3">
 
@@ -293,14 +307,24 @@ export default function Chatbot({ portal }) {
               GUARDRAIL NOTICE
               ================================================= */}
 
-          <div className="flex items-start gap-2 border-b border-rule bg-slate-50 px-4 py-2.5">
+          <div
+            className="flex items-start gap-2 border-b px-4 py-2.5"
+            style={{
+              background: surfaceAlt,
+              borderColor: t.line,
+            }}
+          >
 
             <ShieldCheck
               size={15}
-              className="mt-0.5 shrink-0 text-provider"
+              className="mt-0.5 shrink-0"
+              style={{ color: t.accent }}
             />
 
-            <p className="text-[10px] leading-4 text-ink-3">
+            <p
+              className="text-[10px] leading-4"
+              style={{ color: t.text3 }}
+            >
               I can help with PriorAuth AI features,
               requests, documents, coverage, reviews,
               appeals and account-related questions.
@@ -312,7 +336,10 @@ export default function Chatbot({ portal }) {
               MESSAGES
               ================================================= */}
 
-          <div className="flex-1 space-y-3 overflow-y-auto bg-canvas p-4">
+          <div
+            className="flex-1 space-y-3 overflow-y-auto p-4"
+            style={{ background: surface }}
+          >
 
             {messages.map((message, index) => {
 
@@ -330,13 +357,20 @@ export default function Chatbot({ portal }) {
                 >
 
                   <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[12px] leading-5 ${
+                    className="max-w-[85%] rounded-2xl border px-3.5 py-2.5 text-[12px] leading-5"
+                    style={
                       isUser
-                        ? isPayer
-                          ? 'bg-payer text-white'
-                          : 'bg-provider text-white'
-                        : 'border border-rule bg-white text-ink-2'
-                    }`}
+                        ? {
+                            backgroundImage: `linear-gradient(135deg, ${t.accent}, ${t.accentDeep})`,
+                            borderColor: 'transparent',
+                            color: '#FFFFFF',
+                          }
+                        : {
+                            background: t.panelRaised,
+                            borderColor: t.line,
+                            color: t.text2,
+                          }
+                    }
                   >
                     {message.content}
                   </div>
@@ -351,7 +385,14 @@ export default function Chatbot({ portal }) {
 
             {loading && (
               <div className="flex justify-start">
-                <div className="rounded-2xl border border-rule bg-white px-4 py-2.5 text-[12px] text-ink-3">
+                <div
+                  className="rounded-2xl border px-4 py-2.5 text-[12px]"
+                  style={{
+                    background: t.panelRaised,
+                    borderColor: t.line,
+                    color: t.text3,
+                  }}
+                >
                   Thinking…
                 </div>
               </div>
@@ -363,7 +404,13 @@ export default function Chatbot({ portal }) {
               INPUT
               ================================================= */}
 
-          <div className="border-t border-rule bg-white p-3">
+          <div
+            className="border-t p-3"
+            style={{
+              background: surfaceAlt,
+              borderColor: t.line,
+            }}
+          >
 
             <div className="flex items-end gap-2">
 
@@ -381,7 +428,12 @@ export default function Chatbot({ portal }) {
                 rows={1}
                 maxLength={1000}
                 disabled={loading}
-                className="input min-h-[42px] flex-1 resize-none"
+                className="portal-dark-input min-h-[42px] flex-1 resize-none rounded-lg border px-3.5 py-3 text-[13px] outline-none transition-colors disabled:opacity-50"
+                style={{
+                  background: t.panelRaised,
+                  borderColor: t.line,
+                  color: t.text,
+                }}
               />
 
               <button
@@ -390,11 +442,10 @@ export default function Chatbot({ portal }) {
                   loading ||
                   !input.trim()
                 }
-                className={`grid h-[42px] w-[42px] shrink-0 place-items-center rounded-lg text-white disabled:opacity-40 ${
-                  isPayer
-                    ? 'bg-payer'
-                    : 'bg-provider'
-                }`}
+                className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-lg text-white disabled:opacity-40"
+                style={{
+                  backgroundImage: `linear-gradient(135deg, ${t.accent}, ${t.accentDeep})`,
+                }}
                 aria-label="Send message"
               >
                 <Send size={16} />

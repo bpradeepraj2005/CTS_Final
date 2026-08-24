@@ -9,6 +9,8 @@ import {
   FileWarning,
   Send,
   ShieldAlert,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 
 import {
@@ -37,6 +39,10 @@ import {
   AttributionRail,
   DecisionLedger,
 } from "../components/Explain";
+
+
+/* The page background is painted once by Layout for the whole
+   hospital portal, so these pages only draw panels on top. */
 
 
 /* ============================================================
@@ -87,32 +93,41 @@ export function RequestList() {
   }
 
   return (
-    <div className="space-y-5">
+    <div>
+      <div className="space-y-5">
 
       {/* PAGE HEADER */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="relative overflow-hidden rounded-2xl border border-rule bg-gradient-to-br from-surface via-surface to-provider/15 px-6 py-6 shadow-card">
 
-        <div>
-          <div className="eyebrow">
-            Hospital management
+        {/* decorative accent wash */}
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-provider/40 via-provider/10 to-transparent blur-2xl" />
+
+        <div className="relative flex flex-wrap items-end justify-between gap-4">
+
+          <div>
+            <div className="eyebrow flex items-center gap-1.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-gradient-to-br from-provider to-provider-deep" />
+              Hospital management
+            </div>
+
+            <h1 className="mt-1 text-2xl font-semibold text-ink">
+              Authorization requests
+            </h1>
+
+            <p className="mt-1.5 text-[13px] text-ink-2">
+              Every submitted case, its decision source and
+              the scores that supported the outcome.
+            </p>
           </div>
 
-          <h1 className="mt-1 text-2xl font-semibold">
-            Authorization requests
-          </h1>
+          <Link
+            to="/hospital/new"
+            className="btn border-transparent bg-gradient-to-r from-provider to-provider-deep text-white shadow-sm shadow-provider/20 transition-all hover:shadow-md hover:shadow-provider/30 hover:brightness-105"
+          >
+            New request
+          </Link>
 
-          <p className="mt-1.5 text-[13px] text-ink-2">
-            Every submitted case, its decision source and
-            the scores that supported the outcome.
-          </p>
         </div>
-
-        <Link
-          to="/hospital/new"
-          className="btn bg-provider text-white border-provider hover:bg-provider-deep"
-        >
-          New request
-        </Link>
 
       </div>
 
@@ -122,16 +137,16 @@ export function RequestList() {
 
 
       {/* FILTERS */}
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1.5">
 
         {FILTERS.map(([value, label]) => (
           <button
             key={value}
             onClick={() => setFilter(value)}
-            className={`btn ${
+            className={`btn transition-all duration-150 ${
               filter === value
-                ? "btn-dark"
-                : "btn-ghost"
+                ? "border-transparent bg-gradient-to-r from-provider to-provider-deep text-white shadow-sm shadow-provider/30"
+                : "btn-ghost hover:border-provider-line hover:bg-provider-soft"
             }`}
           >
             {label}
@@ -210,7 +225,7 @@ export function RequestList() {
 
                   <tr
                     key={r.id}
-                    className="row-link"
+                    className="row-link cursor-pointer transition-colors duration-150"
                     onClick={() =>
                       navigate(
                         `/hospital/requests/${r.id}`
@@ -251,17 +266,21 @@ export function RequestList() {
 
 
                     <td className="td num text-right">
-                      {r.policy_fit_score?.toFixed(3) ?? "—"}
+                      <ScoreBadge value={r.policy_fit_score} decimals={3} />
                     </td>
 
 
                     <td className="td num text-right">
-                      {pct(r.necessity_score)}
+                      <ScoreBadge value={r.necessity_score} format="pct" />
                     </td>
 
 
                     <td className="td num text-right">
-                      {pct(r.appeal_probability)}
+                      <ScoreBadge
+                        value={r.appeal_probability}
+                        format="pct"
+                        inverse
+                      />
                     </td>
 
 
@@ -283,7 +302,44 @@ export function RequestList() {
 
       )}
 
+      </div>
     </div>
+  );
+}
+
+
+/* ============================================================
+   SCORE BADGE
+   Small gradient-tinted pill so scores are scannable at a
+   glance without adding a second visual system to the table.
+   ============================================================ */
+
+function ScoreBadge({ value, decimals, format, inverse = false }) {
+  if (value == null) {
+    return <span className="text-ink-3">—</span>;
+  }
+
+  const numeric = format === "pct" ? value : value;
+  const display =
+    format === "pct" ? pct(value) : value.toFixed(decimals ?? 2);
+
+  // 0 = weak/red, 1 = strong/green, inverse flips the meaning
+  // (used for appeal risk, where low is good)
+  const score = inverse ? 1 - numeric : numeric;
+
+  const tone =
+    score >= 0.7
+      ? "bg-approve-soft text-approve ring-approve-line"
+      : score >= 0.4
+        ? "bg-review-soft text-review ring-review-line"
+        : "bg-deny-soft text-deny ring-deny-line";
+
+  return (
+    <span
+      className={`inline-flex min-w-[3.25rem] justify-center rounded-md px-2 py-0.5 text-2xs font-medium ring-1 ring-inset ${tone}`}
+    >
+      {display}
+    </span>
   );
 }
 
@@ -464,7 +520,8 @@ export function RequestDetail() {
 
   return (
 
-    <div className="space-y-5">
+    <div>
+      <div className="space-y-5">
 
       {/* ======================================================
          BACK
@@ -472,9 +529,12 @@ export function RequestDetail() {
 
       <Link
         to="/hospital/requests"
-        className="inline-flex items-center gap-1.5 text-[13px] text-ink-3 hover:text-ink"
+        className="group inline-flex items-center gap-1.5 text-[13px] text-ink-3 transition-colors hover:text-provider-deep"
       >
-        <ArrowLeft size={13} />
+        <ArrowLeft
+          size={13}
+          className="transition-transform group-hover:-translate-x-0.5"
+        />
         Requests
       </Link>
 
@@ -483,76 +543,83 @@ export function RequestDetail() {
          HEADER
          ====================================================== */}
 
-      <div className="flex flex-wrap items-start justify-between gap-5">
+      <div className="relative overflow-hidden rounded-2xl border border-rule bg-gradient-to-br from-surface via-surface to-provider/15 px-6 py-6 shadow-card">
 
-        <div>
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-provider/40 via-provider/10 to-transparent blur-2xl" />
 
-          <div className="flex items-center gap-2">
+        <div className="relative flex flex-wrap items-start justify-between gap-5">
 
-            <span className="num text-2xs text-ink-3">
-              {data.case_number}
-            </span>
+          <div>
 
-            <Status value={data.status} />
+            <div className="flex items-center gap-2">
+
+              <span className="num text-2xs text-ink-3">
+                {data.case_number}
+              </span>
+
+              <Status value={data.status} />
+
+            </div>
+
+
+            <h1 className="mt-2 text-2xl font-semibold text-ink">
+              {data.diagnosis}
+            </h1>
+
+
+            <p className="mt-1 text-[13px] text-ink-2">
+
+              {data.requested_treatment}
+
+              {" · "}
+
+              {data.features?.dose_category}
+
+              {" · "}
+
+              {data.features?.frequency}
+
+              {" · "}
+
+              {data.features?.route}
+
+            </p>
 
           </div>
 
 
-          <h1 className="mt-2 text-2xl font-semibold">
-            {data.diagnosis}
-          </h1>
+          {/* METRICS */}
+
+          <div className="grid grid-cols-3 gap-5">
+
+            <Metric
+              label="Policy fit"
+              value={
+                data.policy_fit_score?.toFixed(3) ??
+                "—"
+              }
+            />
 
 
-          <p className="mt-1 text-[13px] text-ink-2">
-
-            {data.requested_treatment}
-
-            {" · "}
-
-            {data.features?.dose_category}
-
-            {" · "}
-
-            {data.features?.frequency}
-
-            {" · "}
-
-            {data.features?.route}
-
-          </p>
-
-        </div>
+            <Metric
+              label="Necessity"
+              value={
+                pct(data.necessity_score)
+              }
+            />
 
 
-        {/* METRICS */}
+            <Metric
+              label="Processing"
+              value={
+                data.processing_ms != null
+                  ? `${data.processing_ms} ms`
+                  : "—"
+              }
+              muted
+            />
 
-        <div className="grid grid-cols-3 gap-5">
-
-          <Metric
-            label="Policy fit"
-            value={
-              data.policy_fit_score?.toFixed(3) ??
-              "—"
-            }
-          />
-
-
-          <Metric
-            label="Necessity"
-            value={
-              pct(data.necessity_score)
-            }
-          />
-
-
-          <Metric
-            label="Processing"
-            value={
-              data.processing_ms != null
-                ? `${data.processing_ms} ms`
-                : "—"
-            }
-          />
+          </div>
 
         </div>
 
@@ -608,18 +675,18 @@ export function RequestDetail() {
       {!agentValidation && (
 
         <div
-          className="rounded-xl border border-dashed border-ruleStrong bg-white px-5 py-4"
+          className="relative overflow-hidden rounded-xl border border-dashed border-ruleStrong bg-surface px-5 py-4"
         >
 
           <div className="flex items-center gap-3">
 
-            <div className="ai-icon">
+            <div className="ai-icon bg-provider-soft text-provider-deep">
               <Brain size={20} />
             </div>
 
             <div>
 
-              <div className="text-[13px] font-semibold">
+              <div className="text-[13px] font-semibold text-ink">
                 AI Validation Agent
               </div>
 
@@ -687,36 +754,35 @@ export function RequestDetail() {
 
               <div
                 key={doc.id}
-                className="flex items-center gap-3 rounded-md border border-rule bg-canvas px-3 py-3"
+                className="group flex items-center gap-3 rounded-md border border-rule bg-canvas px-3 py-3 transition-all hover:border-provider-line hover:bg-provider-soft"
               >
 
-                <FileText
-                  size={16}
-                  className="text-provider"
-                />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-provider-soft">
+                  <FileText
+                    size={16}
+                    className="text-provider-deep"
+                  />
+                </div>
 
 
-                <div>
+                <div className="min-w-0 flex-1">
 
-                  <div className="text-[13px] font-medium">
+                  <div className="truncate text-[13px] font-medium text-ink">
                     {doc.filename}
                   </div>
 
 
-                  <div className="text-2xs text-ink-3">
+                  <div className="mt-1 flex items-center gap-2">
 
-                    {doc.page_count} pages
+                    <span className="text-2xs text-ink-3">
+                      {doc.page_count} pages
+                    </span>
 
-                    {" · "}
-
-                    {doc.extraction_confidence != null
-                      ? (
-                          doc.extraction_confidence *
-                          100
-                        ).toFixed(1)
-                      : "—"}
-
-                    % extraction confidence
+                    {doc.extraction_confidence != null && (
+                      <ConfidenceBar
+                        value={doc.extraction_confidence}
+                      />
+                    )}
 
                   </div>
 
@@ -765,7 +831,7 @@ export function RequestDetail() {
           >
 
             <textarea
-              className="input"
+              className="input transition-shadow focus:shadow-sm focus:shadow-provider/10"
               rows={5}
               value={appeal.rationale}
               placeholder="Explain why the denial should be reconsidered."
@@ -812,7 +878,7 @@ export function RequestDetail() {
               appeal.rationale.trim()
                 .length < 10
             }
-            className="btn mt-4 bg-provider text-white border-provider hover:bg-provider-deep"
+            className="btn mt-4 border-transparent bg-gradient-to-r from-provider to-provider-deep text-white shadow-sm shadow-provider/20 transition-all hover:shadow-md hover:shadow-provider/30 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:brightness-100"
           >
 
             <Send size={14} />
@@ -908,14 +974,16 @@ export function RequestDetail() {
 
         ) : (
 
-          <div className="divide-y divide-rule">
+          <div className="relative divide-y divide-rule">
 
             {audit.map((event) => (
 
               <div
                 key={event.id}
-                className="py-3 first:pt-0 last:pb-0"
+                className="relative py-3 pl-4 first:pt-0 last:pb-0"
               >
+
+                <span className="absolute left-0 top-4 h-1.5 w-1.5 -translate-x-[3px] rounded-full bg-gradient-to-br from-provider to-provider-deep" />
 
                 <div className="flex items-center justify-between gap-3">
 
@@ -948,7 +1016,33 @@ export function RequestDetail() {
 
       </Card>
 
+      </div>
     </div>
+  );
+}
+
+
+/* ============================================================
+   CONFIDENCE BAR
+   Compact inline gradient meter for extraction confidence,
+   replaces the plain "xx.x% extraction confidence" text.
+   ============================================================ */
+
+function ConfidenceBar({ value }) {
+  const percent = Math.round((value ?? 0) * 100);
+
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="h-1.5 w-14 overflow-hidden rounded-full bg-rule">
+        <span
+          className="block h-full rounded-full bg-gradient-to-r from-provider to-provider-deep"
+          style={{ width: `${percent}%` }}
+        />
+      </span>
+      <span className="text-2xs text-ink-3">
+        {percent}% extracted
+      </span>
+    </span>
   );
 }
 
@@ -957,7 +1051,7 @@ export function RequestDetail() {
    METRIC
    ============================================================ */
 
-function Metric({ label, value }) {
+function Metric({ label, value, muted = false }) {
 
   return (
 
@@ -967,7 +1061,13 @@ function Metric({ label, value }) {
         {label}
       </div>
 
-      <div className="num text-lg font-semibold">
+      <div
+        className={
+          muted
+            ? "num text-lg font-semibold text-ink-2"
+            : "num text-lg font-semibold text-ink"
+        }
+      >
         {value}
       </div>
 
@@ -1005,7 +1105,7 @@ export function SubmittedValues({
 
       {documents?.length > 0 && (
 
-        <div className="border-b border-rule px-4 py-3">
+        <div className="border-b border-rule bg-canvas/60 px-4 py-3">
 
           {documents.map((d) => (
 
@@ -1081,7 +1181,8 @@ function AuditEntry({ e }) {
   const summary = humanizeAuditEvent(e)
 
   return (
-    <li className="px-4 py-3">
+    <li className="relative px-4 py-3 pl-6">
+      <span className="absolute left-4 top-[1.4rem] h-1.5 w-1.5 rounded-full bg-gradient-to-br from-provider to-provider-deep" />
       <div className="flex items-baseline justify-between gap-3">
         <span className="num text-2xs font-medium uppercase tracking-wider">
           {e.action.replace(/_/g, ' ')}
@@ -1098,7 +1199,7 @@ function AuditEntry({ e }) {
         <>
           <button
             onClick={() => setShowRaw((s) => !s)}
-            className="mt-1.5 text-2xs text-ink-3 underline decoration-dotted hover:text-ink"
+            className="mt-1.5 text-2xs text-ink-3 underline decoration-dotted transition-colors hover:text-provider-deep"
           >
             {showRaw ? 'Hide raw details' : 'Show raw details'}
           </button>

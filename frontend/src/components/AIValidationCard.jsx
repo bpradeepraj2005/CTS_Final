@@ -424,10 +424,10 @@ const {
   <div
     className={`mb-5 rounded-xl border px-4 py-3 ${
       critic_agent.status === "PASS"
-        ? "border-emerald-200 bg-emerald-50"
+        ? "border-approve-line bg-approve-soft"
         : critic_agent.status === "WARNING"
-        ? "border-amber-200 bg-amber-50"
-        : "border-red-200 bg-red-50"
+        ? "border-review-line bg-review-soft"
+        : "border-deny-line bg-deny-soft"
     }`}
   >
     <div className="flex items-start justify-between gap-4">
@@ -437,10 +437,10 @@ const {
         <div
           className={`mt-0.5 ${
             critic_agent.status === "PASS"
-              ? "text-emerald-600"
+              ? "text-approve"
               : critic_agent.status === "WARNING"
-              ? "text-amber-600"
-              : "text-red-600"
+              ? "text-review"
+              : "text-deny"
           }`}
         >
           {critic_agent.status === "PASS" ? (
@@ -451,7 +451,7 @@ const {
         </div>
 
         <div>
-          <div className="text-[13px] font-semibold">
+          <div className="text-[13px] font-semibold text-ink">
             Critic Agent
           </div>
 
@@ -473,10 +473,10 @@ const {
       <div
         className={`rounded-full px-2.5 py-1 text-2xs font-semibold ${
           critic_agent.status === "PASS"
-            ? "bg-emerald-100 text-emerald-700"
+            ? "bg-approve/15 text-approve"
             : critic_agent.status === "WARNING"
-            ? "bg-amber-100 text-amber-700"
-            : "bg-red-100 text-red-700"
+            ? "bg-review/15 text-review"
+            : "bg-deny/15 text-deny"
         }`}
       >
         {critic_agent.status}

@@ -126,7 +126,7 @@ export function AttributionRail({ explanation }) {
                 <div className="flex items-center gap-1.5">
                   <span className="truncate text-[13px] font-medium">{r.label}</span>
                   {r.actionable && (
-                    <span className="chip border-provider-line bg-provider-soft text-provider">
+                    <span className="chip border-provider-line bg-provider-soft text-provider-deep">
                       fixable
                     </span>
                   )}

@@ -9,7 +9,7 @@ const STATUS = {
   AUTO_DENIED: ['Auto-denied', 'bg-deny-soft border-deny-line text-deny'],
   DENIED: ['Denied', 'bg-deny-soft border-deny-line text-deny'],
   PENDING_REVIEW: ['In review', 'bg-review-soft border-review-line text-review'],
-  APPEALED: ['Appealed', 'bg-payer-soft border-payer-line text-payer'],
+  APPEALED: ['Appealed', 'bg-payer-soft border-payer-line text-payer-deep'],
   OPEN: ['Open', 'bg-review-soft border-review-line text-review'],
   UPHELD: ['Upheld', 'bg-deny-soft border-deny-line text-deny'],
   OVERTURNED: ['Overturned', 'bg-approve-soft border-approve-line text-approve'],
@@ -43,8 +43,8 @@ export function Kpi({ label, value, unit, sub, tone = 'ink' }) {
     approve: 'text-approve',
     deny: 'text-deny',
     review: 'text-review',
-    provider: 'text-provider',
-    payer: 'text-payer',
+    provider: 'text-provider-deep',
+    payer: 'text-payer-deep',
   }
   return (
     <div className="card p-4">

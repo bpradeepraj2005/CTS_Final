@@ -40,47 +40,64 @@ export default {
         ]
       },
 
+      /* ===================================================
+         DARK PALETTE
+
+         The whole product runs dark. Nothing here is white:
+         `surface` is the panel a card sits on and `canvas` is
+         the deeper ground behind it, so a box always reads as
+         raised rather than as a sheet of paper.
+
+         Portal accents:
+           provider (hospital)  -> violet
+           payer    (insurance) -> blue
+
+         Every `-soft` / `-line` value is a solid hex rather
+         than an rgba() string so Tailwind's `/opacity`
+         modifiers (bg-provider-soft/40, bg-approve/10) still
+         compile.
+         =================================================== */
       colors: {
-        canvas: "#f5f7fb",
-        surface: "#ffffff",
-        ink: "#172033",
-        "ink-2": "#526078",
-        "ink-3": "#8793a8",
+        canvas: "#0C111C",
+        surface: "#141B2A",
+        ink: "#E8EDF7",
+        "ink-2": "#A7B4CC",
+        "ink-3": "#7A87A1",
 
-        rule: "#e5eaf2",
-        ruleStrong: "#d4dbe7",
+        rule: "#232C40",
+        ruleStrong: "#33405C",
 
-        provider: "#2563eb",
-        "provider-deep": "#1d4ed8",
-        "provider-soft": "#eff6ff",
-        "provider-line": "#bfdbfe",
+        provider: "#8B5CF6",
+        "provider-deep": "#A78BFA",
+        "provider-soft": "#221A38",
+        "provider-line": "#4C3A7A",
 
-        payer: "#7c3aed",
-        "payer-deep": "#6d28d9",
-        "payer-soft": "#f5f3ff",
-        "payer-line": "#ddd6fe",
+        payer: "#3B82F6",
+        "payer-deep": "#60A5FA",
+        "payer-soft": "#12203A",
+        "payer-line": "#2E4A7A",
 
-        approve: "#059669",
-        "approve-soft": "#ecfdf5",
-        "approve-line": "#a7f3d0",
+        approve: "#34D399",
+        "approve-soft": "#0F2A22",
+        "approve-line": "#1E5C48",
 
-        deny: "#dc2626",
-        "deny-soft": "#fef2f2",
-        "deny-line": "#fecaca",
+        deny: "#FB7185",
+        "deny-soft": "#2C1520",
+        "deny-line": "#6B2438",
 
-        review: "#d97706",
-        "review-soft": "#fffbeb",
-        "review-line": "#fde68a",
+        review: "#FBBF24",
+        "review-soft": "#2B2110",
+        "review-line": "#6B4E17",
 
-        info: "#0284c7",
-        "info-soft": "#f0f9ff",
-        "info-line": "#bae6fd"
+        info: "#38BDF8",
+        "info-soft": "#0E2333",
+        "info-line": "#1C4E68"
       },
 
       boxShadow: {
-        card: "0 1px 2px rgba(15,23,42,.04), 0 8px 30px rgba(15,23,42,.04)",
-        soft: "0 10px 40px rgba(15,23,42,.08)",
-        elevated: "0 20px 60px rgba(15,23,42,.12)"
+        card: "0 1px 2px rgba(0,0,0,.35), 0 14px 34px -18px rgba(0,0,0,.75)",
+        soft: "0 14px 44px -18px rgba(0,0,0,.7)",
+        elevated: "0 26px 64px -22px rgba(0,0,0,.85)"
       },
 
       borderRadius: {

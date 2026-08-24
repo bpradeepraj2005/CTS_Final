@@ -56,30 +56,30 @@ function priorityStyles(priority) {
   switch (priority) {
     case "CRITICAL":
       return {
-        badge: "border-red-200 bg-red-50 text-red-700",
-        dot: "bg-red-600",
-        text: "text-red-700",
+        badge: "border-deny-line bg-deny-soft text-deny",
+        dot: "bg-deny",
+        text: "text-deny",
       };
 
     case "HIGH":
       return {
-        badge: "border-orange-200 bg-orange-50 text-orange-700",
-        dot: "bg-orange-500",
-        text: "text-orange-700",
+        badge: "border-[#6B3D17] bg-[#2B1A10] text-[#FB923C]",
+        dot: "bg-[#FB923C]",
+        text: "text-[#FB923C]",
       };
 
     case "MEDIUM":
       return {
-        badge: "border-amber-200 bg-amber-50 text-amber-700",
-        dot: "bg-amber-500",
-        text: "text-amber-700",
+        badge: "border-review-line bg-review-soft text-review",
+        dot: "bg-review",
+        text: "text-review",
       };
 
     default:
       return {
-        badge: "border-slate-200 bg-slate-50 text-slate-600",
-        dot: "bg-slate-400",
-        text: "text-slate-600",
+        badge: "border-rule bg-canvas text-ink-3",
+        dot: "bg-ink-3",
+        text: "text-ink-3",
       };
   }
 }
@@ -95,6 +95,10 @@ function formatDate(value) {
 
   return date.toLocaleString();
 }
+
+/* The dark blue insurance-portal background is painted once by
+   Layout for every payer route, so this page only draws the
+   panels that sit on top of it. */
 
 export default function ReviewQueue() {
   const navigate = useNavigate();
@@ -265,7 +269,7 @@ export default function ReviewQueue() {
             </h1>
 
             {criticalCount > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-700">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-deny-line bg-deny-soft px-2.5 py-1 text-[11px] font-bold text-deny">
                 <ShieldAlert size={13} />
                 {criticalCount} Critical
               </span>
@@ -281,7 +285,7 @@ export default function ReviewQueue() {
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-rule bg-white px-4 py-2.5 text-xs font-semibold text-ink-2 transition hover:bg-slate-50 disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-rule bg-surface px-4 py-2.5 text-xs font-semibold text-ink-2 transition hover:border-payer-line hover:bg-payer-soft hover:text-ink disabled:opacity-60"
         >
           <RefreshCw
             size={15}
@@ -296,55 +300,55 @@ export default function ReviewQueue() {
       {/* PRIORITY SUMMARY */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
 
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+        <div className="rounded-xl border border-deny-line bg-deny-soft p-4">
           <div className="flex items-center gap-2">
             <ShieldAlert
               size={17}
-              className="text-red-600"
+              className="text-deny"
             />
 
-            <span className="text-xs font-semibold text-red-700">
+            <span className="text-xs font-semibold text-deny">
               Critical
             </span>
           </div>
 
-          <div className="mt-2 text-2xl font-bold text-red-700">
+          <div className="mt-2 text-2xl font-bold text-deny">
             {criticalCount}
           </div>
 
-          <div className="mt-1 text-[11px] text-red-600">
+          <div className="mt-1 text-[11px] text-deny/80">
             Immediate review
           </div>
         </div>
 
 
-        <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
+        <div className="rounded-xl border border-[#6B3D17] bg-[#2B1A10] p-4">
           <div className="flex items-center gap-2">
             <AlertTriangle
               size={17}
-              className="text-orange-600"
+              className="text-[#FB923C]"
             />
 
-            <span className="text-xs font-semibold text-orange-700">
+            <span className="text-xs font-semibold text-[#FB923C]">
               High
             </span>
           </div>
 
-          <div className="mt-2 text-2xl font-bold text-orange-700">
+          <div className="mt-2 text-2xl font-bold text-[#FB923C]">
             {highCount}
           </div>
 
-          <div className="mt-1 text-[11px] text-orange-600">
+          <div className="mt-1 text-[11px] text-[#FB923C]/80">
             Priority review
           </div>
         </div>
 
 
-        <div className="rounded-xl border border-rule bg-white p-4">
+        <div className="rounded-xl border border-rule bg-surface p-4 shadow-card">
           <div className="flex items-center gap-2">
             <Clock3
               size={17}
-              className="text-provider"
+              className="text-payer-deep"
             />
 
             <span className="text-xs font-semibold text-ink-2">
@@ -352,7 +356,7 @@ export default function ReviewQueue() {
             </span>
           </div>
 
-          <div className="mt-2 text-2xl font-bold">
+          <div className="mt-2 text-2xl font-bold text-ink">
             {queue.length}
           </div>
 
@@ -371,8 +375,8 @@ export default function ReviewQueue() {
           onClick={() => setActiveTab("unassigned")}
           className={`rounded-lg px-4 py-2.5 text-xs font-semibold transition ${
             activeTab === "unassigned"
-              ? "bg-ink text-white"
-              : "border border-rule bg-white text-ink-2 hover:bg-slate-50"
+              ? "border border-transparent bg-payer text-white shadow-sm shadow-payer/30"
+              : "border border-rule bg-surface text-ink-2 hover:border-payer-line hover:bg-payer-soft hover:text-ink"
           }`}
         >
           Unassigned
@@ -382,8 +386,8 @@ export default function ReviewQueue() {
           onClick={() => setActiveTab("assigned")}
           className={`rounded-lg px-4 py-2.5 text-xs font-semibold transition ${
             activeTab === "assigned"
-              ? "bg-ink text-white"
-              : "border border-rule bg-white text-ink-2 hover:bg-slate-50"
+              ? "border border-transparent bg-payer text-white shadow-sm shadow-payer/30"
+              : "border border-rule bg-surface text-ink-2 hover:border-payer-line hover:bg-payer-soft hover:text-ink"
           }`}
         >
           Assigned to me
@@ -393,8 +397,8 @@ export default function ReviewQueue() {
           onClick={() => setActiveTab("everything")}
           className={`rounded-lg px-4 py-2.5 text-xs font-semibold transition ${
             activeTab === "everything"
-              ? "bg-ink text-white"
-              : "border border-rule bg-white text-ink-2 hover:bg-slate-50"
+              ? "border border-transparent bg-payer text-white shadow-sm shadow-payer/30"
+              : "border border-rule bg-surface text-ink-2 hover:border-payer-line hover:bg-payer-soft hover:text-ink"
           }`}
         >
           Everything pending
@@ -405,7 +409,7 @@ export default function ReviewQueue() {
 
       {/* ERROR */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-deny-line bg-deny-soft p-4 text-sm text-deny">
           <div className="font-semibold">
             Unable to load review queue
           </div>
@@ -418,7 +422,7 @@ export default function ReviewQueue() {
 
 
       {/* QUEUE */}
-      <div className="overflow-hidden rounded-xl border border-rule bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-rule bg-surface shadow-card">
 
         {loading ? (
           <div className="flex min-h-[350px] items-center justify-center">
@@ -435,14 +439,14 @@ export default function ReviewQueue() {
 
           <div className="flex min-h-[350px] flex-col items-center justify-center px-6 text-center">
 
-            <div className="grid h-14 w-14 place-items-center rounded-full border border-rule bg-slate-50">
+            <div className="grid h-14 w-14 place-items-center rounded-full border border-rule bg-canvas">
               <Inbox
                 size={24}
                 className="text-ink-3"
               />
             </div>
 
-            <h3 className="mt-4 text-sm font-bold">
+            <h3 className="mt-4 text-sm font-bold text-ink">
               {activeTab === "unassigned"
                 ? "No unassigned cases"
                 : activeTab === "assigned"
@@ -465,7 +469,7 @@ export default function ReviewQueue() {
           <div>
 
             {/* TABLE HEADER */}
-            <div className="hidden grid-cols-[1.5fr_1.4fr_.7fr_.7fr_1fr_.8fr] gap-4 border-b border-rule bg-slate-50 px-5 py-3 text-[10px] font-semibold uppercase tracking-[.12em] text-ink-3 lg:grid">
+            <div className="hidden grid-cols-[1.5fr_1.4fr_.7fr_.7fr_1fr_.8fr] gap-4 border-b border-rule bg-canvas px-5 py-3 text-[10px] font-semibold uppercase tracking-[.12em] text-ink-3 lg:grid">
 
               <div>Case</div>
               <div>Diagnosis / Therapy</div>
@@ -516,12 +520,12 @@ export default function ReviewQueue() {
                       navigate(`/hospital/requests/${id}`);
                     }
                   }}
-                  className="group grid w-full grid-cols-1 gap-4 border-b border-rule px-5 py-5 text-left transition hover:bg-slate-50 lg:grid-cols-[1.5fr_1.4fr_.7fr_.7fr_1fr_.8fr] lg:items-center"
+                  className="group grid w-full grid-cols-1 gap-4 border-b border-rule px-5 py-5 text-left transition hover:bg-payer-soft lg:grid-cols-[1.5fr_1.4fr_.7fr_.7fr_1fr_.8fr] lg:items-center"
                 >
 
                   {/* CASE */}
                   <div>
-                    <div className="text-xs font-bold text-provider">
+                    <div className="text-xs font-bold text-payer-deep">
                       {caseNumber}
                     </div>
 
@@ -575,7 +579,7 @@ export default function ReviewQueue() {
 
                   {/* STATUS */}
                   <div>
-                    <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+                    <span className="inline-flex rounded-full border border-review-line bg-review-soft px-2.5 py-1 text-[10px] font-bold text-review">
                       {status === "PENDING"
                         ? "PENDING REVIEW"
                         : status}
@@ -584,7 +588,7 @@ export default function ReviewQueue() {
 
 
                   {/* ACTION */}
-                  <div className="flex items-center justify-end gap-2 text-xs font-semibold text-provider">
+                  <div className="flex items-center justify-end gap-2 text-xs font-semibold text-payer-deep">
                     Review
 
                     <ChevronRight

@@ -23,6 +23,10 @@ function urgencyTone(u) {
   return ['Routine', 'border-rule bg-canvas text-ink-3', 'ink']
 }
 
+/* The dark blue insurance-portal background is painted once by
+   Layout for every payer route, so these pages only draw the
+   panels that sit on top of it. */
+
 export function ReviewQueue() {
   const [scope, setScope] = useState('mine')
   const [rows, setRows] = useState(null)
@@ -34,96 +38,102 @@ export function ReviewQueue() {
   }, [scope])
 
   return (
-    <div className="space-y-5">
-      <div>
-        <div className="eyebrow">Insurance organization</div>
-        <h1 className="mt-1 text-2xl font-semibold">Review queue</h1>
-        <p className="mt-1.5 text-[13px] text-ink-2">
-          Ordered by clinical urgency, not arrival time. The most contested and most
-          severe cases surface first.
-        </p>
-      </div>
+    <>
+      <div className="space-y-5">
+        <div>
+          <div className="eyebrow">Insurance organization</div>
+          <h1 className="mt-1 text-2xl font-semibold">Review queue</h1>
+          <p className="mt-1.5 text-[13px] text-ink-2">
+            Ordered by clinical urgency, not arrival time. The most contested and most
+            severe cases surface first.
+          </p>
+        </div>
 
-      <div className="flex gap-1">
-        {SCOPES.map(([value, label]) => (
-          <button
-            key={value} onClick={() => setScope(value)}
-            className={`btn ${scope === value ? 'btn-dark' : 'btn-ghost'}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+        <div className="flex gap-1">
+          {SCOPES.map(([value, label]) => (
+            <button
+              key={value} onClick={() => setScope(value)}
+              className={
+                scope === value
+                  ? 'btn border-transparent bg-payer text-white hover:bg-payer-deep'
+                  : 'btn-ghost'
+              }
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-      {!rows ? (
-        <Spinner label="Loading queue" />
-      ) : rows.length === 0 ? (
-        <Card bodyClass="p-0">
-          <Empty icon={Inbox} title="Queue is clear">
-            {scope === 'mine'
-              ? 'Nothing is assigned to you right now. Check the unassigned queue for cases waiting on any reviewer.'
-              : 'No cases are waiting on a human reviewer.'}
-          </Empty>
-        </Card>
-      ) : (
-        <Card bodyClass="p-0" title={`${rows.length} case${rows.length === 1 ? '' : 's'} pending`}>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="th w-28">Urgency</th>
-                  <th className="th">Case</th>
-                  <th className="th">Diagnosis and therapy</th>
-                  <th className="th">Assigned</th>
-                  <th className="th text-right">Policy fit</th>
-                  <th className="th text-right">Necessity</th>
-                  <th className="th text-right">Appeal risk</th>
-                  <th className="th text-right">Filed</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => {
-                  const [label, chip, tone] = urgencyTone(r.urgency_score ?? 0)
-                  return (
-                    <tr key={r.id} className="row-link" onClick={() => navigate(`/payer/cases/${r.id}`)}>
-                      <td className="td">
-                        <span className={`chip ${chip}`}>{label}</span>
-                        <div className="mt-1.5 w-16"><Meter value={r.urgency_score ?? 0} tone={tone} /></div>
-                      </td>
-                      <td className="td num text-2xs">{r.case_number}</td>
-                      <td className="td">
-                        <div className="font-medium">{r.diagnosis}</div>
-                        <div className="text-2xs text-ink-3">
-                          {r.requested_treatment} · {r.disease_severity} · {r.provider_specialty}
-                        </div>
-                      </td>
-                      <td className="td">
-                        {r.assigned_reviewer ? (
-                          <>
-                            <div className="text-[13px]">{r.assigned_reviewer.name}</div>
-                            {r.assignment_was_reassigned && (
-                              <div className="flex items-center gap-1 text-2xs text-review">
-                                <ArrowRightLeft size={10} /> reassigned
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-2xs text-ink-3">Unassigned</span>
-                        )}
-                      </td>
-                      <td className="td num text-right">{r.policy_fit_score?.toFixed(3) ?? '—'}</td>
-                      <td className="td num text-right">{pct(r.necessity_score)}</td>
-                      <td className="td num text-right text-ink-2">{pct(r.appeal_probability)}</td>
-                      <td className="td text-right text-2xs text-ink-3">{fmtDate(r.created_at)}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
-    </div>
+        {!rows ? (
+          <Spinner label="Loading queue" />
+        ) : rows.length === 0 ? (
+          <Card bodyClass="p-0">
+            <Empty icon={Inbox} title="Queue is clear">
+              {scope === 'mine'
+                ? 'Nothing is assigned to you right now. Check the unassigned queue for cases waiting on any reviewer.'
+                : 'No cases are waiting on a human reviewer.'}
+            </Empty>
+          </Card>
+        ) : (
+          <Card bodyClass="p-0" title={`${rows.length} case${rows.length === 1 ? '' : 's'} pending`}>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="th w-28">Urgency</th>
+                    <th className="th">Case</th>
+                    <th className="th">Diagnosis and therapy</th>
+                    <th className="th">Assigned</th>
+                    <th className="th text-right">Policy fit</th>
+                    <th className="th text-right">Necessity</th>
+                    <th className="th text-right">Appeal risk</th>
+                    <th className="th text-right">Filed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => {
+                    const [label, chip, tone] = urgencyTone(r.urgency_score ?? 0)
+                    return (
+                      <tr key={r.id} className="row-link" onClick={() => navigate(`/payer/cases/${r.id}`)}>
+                        <td className="td">
+                          <span className={`chip ${chip}`}>{label}</span>
+                          <div className="mt-1.5 w-16"><Meter value={r.urgency_score ?? 0} tone={tone} /></div>
+                        </td>
+                        <td className="td num text-2xs">{r.case_number}</td>
+                        <td className="td">
+                          <div className="font-medium">{r.diagnosis}</div>
+                          <div className="text-2xs text-ink-3">
+                            {r.requested_treatment} · {r.disease_severity} · {r.provider_specialty}
+                          </div>
+                        </td>
+                        <td className="td">
+                          {r.assigned_reviewer ? (
+                            <>
+                              <div className="text-[13px]">{r.assigned_reviewer.name}</div>
+                              {r.assignment_was_reassigned && (
+                                <div className="flex items-center gap-1 text-2xs text-review">
+                                  <ArrowRightLeft size={10} /> reassigned
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-2xs text-ink-3">Unassigned</span>
+                          )}
+                        </td>
+                        <td className="td num text-right">{r.policy_fit_score?.toFixed(3) ?? '—'}</td>
+                        <td className="td num text-right">{pct(r.necessity_score)}</td>
+                        <td className="td num text-right text-ink-2">{pct(r.appeal_probability)}</td>
+                        <td className="td text-right text-2xs text-ink-3">{fmtDate(r.created_at)}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
+      </div>
+    </>
   )
 }
 
@@ -294,7 +304,7 @@ function RoutingPanel({ candidates, assignedId, onReassign, busy }) {
                 <div className="min-w-0">
                   <span className="text-[13px] font-medium">{c.name}</span>
                   {c.reviewer_id === assignedId && (
-                    <span className="chip ml-2 border-payer-line bg-payer-soft text-payer">assigned</span>
+                    <span className="chip ml-2 border-payer-line bg-payer-soft text-payer-deep">assigned</span>
                   )}
                   {blocked && (
                     <span className="chip ml-2 border-review-line bg-review-soft text-review">
@@ -367,7 +377,8 @@ export function Appeals() {
   if (!rows) return <Spinner label="Loading appeals" />
 
   return (
-    <div className="space-y-5">
+    <>
+      <div className="space-y-5">
       <div>
         <div className="eyebrow">Insurance organization</div>
         <h1 className="mt-1 text-2xl font-semibold">Appeals</h1>
@@ -387,8 +398,10 @@ export function Appeals() {
               {rows.map((a) => (
                 <button
                   key={a.id} onClick={() => setActive(a)}
-                  className={`block w-full px-4 py-3 text-left transition-colors hover:bg-canvas ${
-                    active?.id === a.id ? 'bg-payer-soft' : ''
+                  className={`block w-full px-4 py-3 text-left transition-colors ${
+                    active?.id === a.id
+                      ? 'bg-payer-soft'
+                      : 'hover:bg-canvas'
                   }`}
                 >
                   <div className="flex items-baseline justify-between gap-3">
@@ -452,7 +465,8 @@ export function Appeals() {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
 
@@ -465,7 +479,8 @@ export function Reviewers() {
   if (!rows) return <Spinner label="Loading reviewers" />
 
   return (
-    <div className="space-y-5">
+    <>
+      <div className="space-y-5">
       <div>
         <div className="eyebrow">Insurance organization</div>
         <h1 className="mt-1 text-2xl font-semibold">Reviewer roster</h1>
@@ -526,6 +541,7 @@ export function Reviewers() {
           </table>
         </Card>
       )}
-    </div>
+      </div>
+    </>
   )
 }
