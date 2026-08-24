@@ -112,3 +112,70 @@ GROQ_MODEL = os.getenv(
     "GROQ_MODEL",
     "openai/gpt-oss-120b",
 )
+
+
+# -----------------------------
+# MODEL 1 -- guideline reasoning service (Render)
+# -----------------------------
+
+PRIOR_AUTH_URL = os.getenv(
+    "PRIOR_AUTH_URL",
+    "https://prior-auth-api-bmju.onrender.com",
+).rstrip("/")
+
+PRIOR_AUTH_TOKEN = os.getenv(
+    "PRIOR_AUTH_TOKEN",
+    "",
+).strip()
+
+# Measured against the live free-tier instance: cold start 50-90s, warm
+# /analyze ~54s. 120s leaves headroom without hanging a worker indefinitely.
+PRIOR_AUTH_READ_TIMEOUT = float(
+    os.getenv("PRIOR_AUTH_READ_TIMEOUT", "120")
+)
+
+PRIOR_AUTH_CONNECT_TIMEOUT = float(
+    os.getenv("PRIOR_AUTH_CONNECT_TIMEOUT", "10")
+)
+
+# Wake the instance at startup so the first real request does not pay the
+# cold start. Turn off for local development against a warm instance.
+PRIOR_AUTH_WARM_ON_STARTUP = os.getenv(
+    "PRIOR_AUTH_WARM_ON_STARTUP", "1"
+) not in ("0", "false", "False")
+
+# Append the guideline rules to the decision ledger as extra rows. The necessity
+# score is computed before they are added, so this changes what a reviewer sees
+# and not what the engine decides. Set to 0 if the ledger gets too long.
+INCLUDE_GUIDELINE_CRITERIA = os.getenv(
+    "INCLUDE_GUIDELINE_CRITERIA", "1"
+) not in ("0", "false", "False")
+
+
+# -----------------------------
+# MODEL 2 -- appeal-propensity regressor (HistGradientBoostingRegressor)
+# -----------------------------
+
+MODEL2_PATH = Path(
+    os.getenv(
+        "MODEL2_PATH",
+        str(BASE_DIR / "ml" / "models" / "appeal_propensity.joblib"),
+    )
+)
+
+MODEL2_METRICS_PATH = Path(
+    os.getenv(
+        "MODEL2_METRICS_PATH",
+        str(BASE_DIR / "ml" / "models" / "appeal_metrics.json"),
+    )
+)
+
+MODEL2_ENABLED = os.getenv(
+    "MODEL2_ENABLED", "1"
+) not in ("0", "false", "False")
+
+# A denial whose reappeal risk lands above this percentile of the training
+# population goes to a human even when nothing is fixable by documentation.
+MODEL2_REAPPEAL_PERCENTILE = float(
+    os.getenv("MODEL2_REAPPEAL_PERCENTILE", "80")
+)

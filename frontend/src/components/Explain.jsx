@@ -1,4 +1,4 @@
-import { Check, Lock, Minus, X } from 'lucide-react'
+import { AlertTriangle, Check, CheckCircle2, Lock, Minus, X } from 'lucide-react'
 import { Card, Meter, pct } from './ui'
 
 /* --------------------------------------------------------------------------
@@ -94,8 +94,14 @@ export function DecisionLedger({ criteria, rationale, necessityScore }) {
 /* --------------------------------------------------------------------------
    Attribution rail
 
-   Per-case feature contributions to the policy-fit score, diverging from a
+   Per-criterion contributions to the approval-likelihood score, diverging from a
    center axis: right of the line pushed the score up, left pushed it down.
+
+   Each row is one criterion from the matched guideline record, so the value is
+   the evidence the service found in the submission and the reference is the
+   criterion's obligation. Rows carry a page number back into the source
+   guideline, which is what makes the score checkable rather than merely
+   reported.
    -------------------------------------------------------------------------- */
 export function AttributionRail({ explanation }) {
   if (!explanation?.contributions?.length) return null
@@ -130,11 +136,16 @@ export function AttributionRail({ explanation }) {
                       fixable
                     </span>
                   )}
+                  {r.page != null && (
+                    <span className="chip border-rule bg-canvas text-ink-3">
+                      p.{r.page}
+                    </span>
+                  )}
                 </div>
-                <div className="truncate text-2xs text-ink-3">
-                  <span className="num">{String(r.value)}</span>
-                  <span className="mx-1.5">vs typical</span>
-                  <span className="num">{String(r.reference)}</span>
+                <div className="truncate text-2xs text-ink-3" title={String(r.value)}>
+                  <span className="uppercase tracking-wide">{String(r.reference)}</span>
+                  <span className="mx-1.5">·</span>
+                  <span>{String(r.value)}</span>
                 </div>
               </div>
 
@@ -172,9 +183,15 @@ export function AttributionRail({ explanation }) {
               <li key={l.feature} className="flex items-start gap-2 text-[13px] text-provider-deep">
                 <Minus size={12} className="mt-1 shrink-0" />
                 <span>
-                  {l.label} is <span className="num">{String(l.value)}</span> against a typical{' '}
-                  <span className="num">{String(l.reference)}</span>, costing{' '}
-                  <span className="num">{Math.abs(l.contribution).toFixed(4)}</span>.
+                  <span className="font-medium">{l.label}</span>
+                  {l.page != null && <span className="num"> (p.{l.page})</span>} is unmet
+                  {l.value ? (
+                    <>
+                      {' '}
+                      — <span className="num">{String(l.value)}</span>
+                    </>
+                  ) : null}
+                  , costing <span className="num">{Math.abs(l.contribution).toFixed(4)}</span>.
                 </span>
               </li>
             ))}
@@ -193,6 +210,26 @@ export function AttributionRail({ explanation }) {
    more into the number than the model supports. */
 export function AppealForecast({ prediction }) {
   if (!prediction) return null
+
+  /* Model 2 runs only on the denial branch, so an approved or still-pending
+     request has nothing to forecast. Saying "0% chance this denial is
+     challenged" would read as a confident prediction of no appeal, when in fact
+     no appeal question was ever asked. */
+  if (prediction.assessed === false) {
+    return (
+      <Card eyebrow="Appeal prediction model" title="Likelihood of an appeal" bodyClass="p-4">
+        <p className="text-[13px] text-ink-2">
+          {prediction.top_label || 'Not assessed.'}
+        </p>
+        <p className="mt-1.5 text-2xs leading-relaxed text-ink-3">
+          The supporting-material model only runs on denials. Nothing here is a
+          prediction that this request will not be appealed — the question was
+          not asked.
+        </p>
+      </Card>
+    )
+  }
+
   const weak =
     prediction.model_macro_auc != null && prediction.model_macro_auc < 0.6
 
@@ -221,15 +258,140 @@ export function AppealForecast({ prediction }) {
 
       {weak && (
         <p className="mt-4 rounded-md border border-review-line bg-review-soft px-3 py-2 text-2xs leading-relaxed text-review">
-          Held-out macro AUC is{' '}
-          <span className="num">{prediction.model_macro_auc?.toFixed(3)}</span> against 0.500 for
-          random guessing, and accuracy is{' '}
-          <span className="num">{pct(prediction.model_accuracy, 1)}</span> against a{' '}
-          <span className="num">{pct(prediction.baseline_accuracy, 1)}</span> majority-class
-          baseline. Treat these probabilities as close to uninformative until the model is
-          retrained on data that separates the classes.
+          This model was fitted on{' '}
+          <span className="num">{prediction.trained_on || 'synthetic labels'}</span>, scoring
+          PR-AUC <span className="num">{prediction.model_accuracy?.toFixed(3)}</span> against a{' '}
+          <span className="num">{pct(prediction.baseline_accuracy, 1)}</span> positive base rate.
+          It has no measured discrimination on real appeal behaviour. The split between fixable
+          and unfixable gaps below is rule-based and does not depend on it, but treat the
+          percentages as uninformative until the model is retrained on observed outcomes.
         </p>
       )}
     </Card>
+  )
+}
+
+/* --------------------------------------------------------------------------
+   Supporting material
+
+   Model 2's output, and the reason a denial did or did not stop at the machine.
+   It splits every unmet criterion into gaps a provider can close with paperwork
+   and gaps no document will fix. Anything fixable pulls the case back to a
+   human, because denying a request for a missing lab report that could arrive
+   in two days is a worse error than the delay.
+   -------------------------------------------------------------------------- */
+export function SupportingMaterial({ assessment }) {
+  if (!assessment) return null
+  const heldForHuman = assessment.route === 'HUMAN_REVIEW'
+
+  return (
+    <Card
+      eyebrow="Supporting-material assessment"
+      title={heldForHuman ? 'Held for human review' : 'Auto-denied'}
+      action={
+        <span
+          className={`chip ${
+            heldForHuman
+              ? 'border-review-line bg-review-soft text-review'
+              : 'border-deny-line bg-deny-soft text-deny'
+          }`}
+        >
+          {heldForHuman ? <AlertTriangle size={11} /> : <X size={11} />}
+          {heldForHuman ? 'ask the provider' : 'nothing to send now'}
+        </span>
+      }
+    >
+      <p className="text-[13px] leading-relaxed text-ink-2">{assessment.reason}</p>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <Stat
+          label="Criteria satisfied"
+          value={
+            assessment.criteria_satisfaction != null
+              ? `${assessment.criteria_satisfaction.toFixed(0)}/100`
+              : '—'
+          }
+        />
+        <Stat
+          label="Reappeal risk"
+          value={
+            assessment.reappeal_percent != null ? `${assessment.reappeal_percent}%` : '—'
+          }
+        />
+        <Stat
+          label="Percentile vs corpus"
+          value={
+            assessment.reappeal_percentile != null ? `${assessment.reappeal_percentile}` : '—'
+          }
+        />
+      </div>
+
+      {assessment.fixable_gaps?.length > 0 && (
+        <div className="mt-5 rounded-md border border-provider-line bg-provider-soft p-4">
+          <div className="eyebrow text-provider-deep">
+            Fixable in days — ask before denying
+          </div>
+          <ul className="mt-2 space-y-1.5">
+            {assessment.fixable_gaps.map((g) => (
+              <li
+                key={g}
+                className="flex items-start gap-2 text-[13px] leading-relaxed text-provider-deep"
+              >
+                <CheckCircle2 size={12} className="mt-1 shrink-0" />
+                <span>{g}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {assessment.hard_gaps?.length > 0 && (
+        <div className="mt-3 rounded-md border border-deny-line bg-deny-soft p-4">
+          <div className="eyebrow text-deny">Not fixable by documentation</div>
+          <ul className="mt-2 space-y-1.5">
+            {assessment.hard_gaps.map((g) => (
+              <li
+                key={g}
+                className="flex items-start gap-2 text-[13px] leading-relaxed text-deny"
+              >
+                <Minus size={12} className="mt-1 shrink-0" />
+                <span>{g}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {assessment.resubmission_checklist?.length > 0 && (
+        <div className="mt-3 rounded-md border border-rule bg-canvas p-4">
+          <div className="eyebrow">
+            {heldForHuman ? 'Request from the provider' : 'Resubmission path'}
+          </div>
+          <ul className="mt-2 space-y-1.5">
+            {assessment.resubmission_checklist.map((c) => (
+              <li key={c} className="flex items-start gap-2 text-[13px] leading-relaxed text-ink-2">
+                <Check size={12} className="mt-1 shrink-0 text-ink-3" />
+                <span>{c}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <p className="mt-4 text-2xs leading-relaxed text-ink-3">
+        The fixable / not-fixable split is rule-based and auditable. The
+        percentages come from a model fitted on {assessment.trained_on || 'synthetic labels'},
+        so they rank cases against each other but are not calibrated to real appeal rates.
+      </p>
+    </Card>
+  )
+}
+
+function Stat({ label, value }) {
+  return (
+    <div className="rounded-md border border-rule bg-canvas px-3 py-2.5">
+      <div className="eyebrow">{label}</div>
+      <div className="num mt-1 text-lg font-semibold leading-none">{value ?? '—'}</div>
+    </div>
   )
 }

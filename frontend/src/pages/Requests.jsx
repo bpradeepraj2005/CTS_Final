@@ -36,6 +36,7 @@ import {
   AppealForecast,
   AttributionRail,
   DecisionLedger,
+  SupportingMaterial,
 } from "../components/Explain";
 
 
@@ -526,10 +527,10 @@ export function RequestDetail() {
 
         {/* METRICS */}
 
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-4 gap-5">
 
           <Metric
-            label="Policy fit"
+            label="Approval likelihood"
             value={
               data.policy_fit_score?.toFixed(3) ??
               "—"
@@ -541,6 +542,16 @@ export function RequestDetail() {
             label="Necessity"
             value={
               pct(data.necessity_score)
+            }
+          />
+
+
+          <Metric
+            label="Complexity"
+            value={
+              data.features?.complexity_score != null
+                ? data.features.complexity_score.toFixed(3)
+                : "—"
             }
           />
 
@@ -662,6 +673,14 @@ export function RequestDetail() {
       {/* ======================================================
          APPEAL FORECAST
          ====================================================== */}
+
+      {/* Model 2 -- only present on the denial branch */}
+      <SupportingMaterial
+        assessment={
+          data.features?.model2_assessment
+        }
+      />
+
 
       <AppealForecast
         prediction={

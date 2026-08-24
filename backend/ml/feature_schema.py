@@ -130,3 +130,15 @@ def _i(v, default=0):
         return int(float(v))
     except (TypeError, ValueError):
         return default
+
+# --- Appeal regressor -------------------------------------------------------
+
+# Model 2 is served on the denial branch, where the only inputs available are
+# the submitted case fields. Deliberately excludes policy_fit_score and
+# clinical_evidence_score: both exist in the training CSV, but neither is
+# produced by the live pipeline in the same units any more. Model 1's approval
+# likelihood is guideline-derived and capped on unmet mandatory criteria, so it
+# occupies a different range than the CSV column of the same name. Training on a
+# feature whose meaning shifts between fit and serve is how a model quietly gets
+# worse in production.
+APPEAL_REGRESSOR_FEATURES = RAW_FIELDS + DERIVED_FIELDS

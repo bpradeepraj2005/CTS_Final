@@ -1,0 +1,58 @@
+{
+  "dataset_rows": 90000,
+  "source_csv": "appeals_prediction_transformed.csv",
+  "corpus": "denied requests only",
+  "features_used": 38,
+  "excluded_features": [
+    "policy_fit_score",
+    "clinical_evidence_score"
+  ],
+  "propensity": {
+    "task": "regression on the 0/1 appeal indicator",
+    "target": "appeal_status != NEVER_APPLIED",
+    "model": "HistGradientBoostingRegressor",
+    "r2": 0.0032,
+    "mae": 0.4285,
+    "brier": 0.2144,
+    "roc_auc": 0.5372,
+    "pr_auc": 0.714,
+    "base_rate": 0.6869,
+    "predictions_out_of_unit_range": 0,
+    "n_train": 72000,
+    "n_test": 18000,
+    "distribution_argmax_accuracy": 0.3175,
+    "majority_class_baseline": 0.3131,
+    "distribution_lift_over_baseline": 0.0044
+  },
+  "per_outcome": {
+    "NEVER_APPLIED": {
+      "r2": 0.003,
+      "mae": 0.4285,
+      "roc_auc": 0.5361,
+      "prevalence": 0.3131
+    },
+    "REAPPLIED": {
+      "r2": -0.0001,
+      "mae": 0.367,
+      "roc_auc": 0.5086,
+      "prevalence": 0.2423
+    },
+    "FORMAL_APPEAL": {
+      "r2": -0.0004,
+      "mae": 0.3971,
+      "roc_auc": 0.5052,
+      "prevalence": 0.2732
+    },
+    "APPEAL_WITH_NEW_DOCUMENTATION": {
+      "r2": -0.0002,
+      "mae": 0.2843,
+      "roc_auc": 0.5083,
+      "prevalence": 0.1713
+    }
+  },
+  "notes": [
+    "Metrics are computed on a held-out 20% split and reported verbatim.",
+    "policy_fit_score and clinical_evidence_score are excluded: the live pipeline no longer produces them in the units this CSV recorded.",
+    "The corpus is denial-only, which matches where Model 2 runs. It knows nothing about approved requests."
+  ]
+}

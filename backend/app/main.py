@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import CORS_ORIGINS
+from .config import CORS_ORIGINS, PRIOR_AUTH_URL, PRIOR_AUTH_WARM_ON_STARTUP
 from .database import Base, engine
 from .routers import auth, chat, dashboard, requests, review, validation
-from .services import ml
+from .services import ml, prior_auth_client
 from .routers.admin import router as admin_router
 
 app = FastAPI(
@@ -44,22 +44,37 @@ app.include_router(admin_router)
 def startup() -> None:
     Base.metadata.create_all(bind=engine)
 
+    if PRIOR_AUTH_WARM_ON_STARTUP:
+        # Wake the guideline service now rather than making the first real user
+        # wait out a cold start. Runs on a background thread; a failed warm-up
+        # must not block start-up.
+        prior_auth_client.warm()
+
     ready = ml.models_ready()
 
     print("\n==========================================")
     print(" PRIOR AUTHORIZATION PLATFORM")
     print("==========================================")
     print(
-        "Policy-fit model:",
-        "READY" if ready["policy_fit"] else "MISSING",
+        "Model 1  guideline service:",
+        "REACHABLE" if ready["policy_fit"] else "UNREACHABLE",
     )
+    print("         ", PRIOR_AUTH_URL)
     print(
-        "Appeal model:",
+        "Model 2  supporting-material:",
         "READY" if ready["appeal_propensity"] else "MISSING",
     )
 
-    if not all(ready.values()):
-        print("\nWARNING: ML model files are missing.")
+    if not ready["policy_fit"]:
+        print(
+            "\nWARNING: the guideline service is not answering. It may be waking "
+            "from idle; adjudication will return 503 until it does."
+        )
+    if not ready["appeal_propensity"]:
+        print(
+            "\nWARNING: Model 2 did not load. Denials will stand as auto-denied "
+            "without a supporting-material check."
+        )
 
     print("==========================================\n")
 
